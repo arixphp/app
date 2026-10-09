@@ -6,9 +6,6 @@
     <title>{{ $title }} · ArixPHP</title>
     <meta name="description" content="{{ $description ?? '' }}">
     <link rel="canonical" href="{{ url()->current() }}">
-    @foreach(config('app.locales') as $language)
-        <link rel="alternate" hreflang="{{ $language }}" href="{{ url(url()->current_path(), $language) }}">
-    @endforeach
     <link rel="stylesheet" href="{{ asset('styles/app.css') }}?v=3">
     <script src="{{ asset('scripts/htmx.js') }}?v=2.0.11" defer></script>
     <script src="{{ asset('scripts/app.js') }}?v=1" defer></script>

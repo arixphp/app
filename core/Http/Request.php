@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Arix\Http;
 
 use Arix\Constants\HttpMethod;
+use InvalidArgumentException;
+use RuntimeException;
 
 final class Request
 {
@@ -13,11 +15,15 @@ final class Request
         public readonly string $uri,
         public readonly array $headers = [],
         public readonly array $query = [],
+        private readonly string $body = '',
     ) {
     }
 
-    public static function fromGlobals(): self
+    public static function fromGlobals(int $maxBodyBytes = 1048576): self
     {
+        if ($maxBodyBytes < 1 || $maxBodyBytes === PHP_INT_MAX) {
+            throw new InvalidArgumentException('Body limit must be a positive bounded integer.');
+        }
         $headers = [];
         foreach ($_SERVER as $name => $value) {
             if (str_starts_with($name, 'HTTP_')) {
@@ -25,7 +31,25 @@ final class Request
             }
         }
 
-        return new self(strtoupper($_SERVER['REQUEST_METHOD'] ?? HttpMethod::GET->value), $_SERVER['REQUEST_URI'] ?? '/', $headers, $_GET);
+        foreach (['CONTENT_TYPE' => 'content-type', 'CONTENT_LENGTH' => 'content-length'] as $key => $name) {
+            if (isset($_SERVER[$key])) {
+                $headers[$name] = (string) $_SERVER[$key];
+            }
+        }
+        $body = file_get_contents('php://input', false, null, 0, $maxBodyBytes + 1);
+        if ($body === false) {
+            throw new RuntimeException('Cannot read request body.');
+        }
+        if (strlen($body) > $maxBodyBytes) {
+            throw new HttpException(413, 'Request body is too large.');
+        }
+
+        return new self($_SERVER['REQUEST_METHOD'] ?? HttpMethod::GET->value, $_SERVER['REQUEST_URI'] ?? '/', $headers, $_GET, $body);
+    }
+
+    public function body(): string
+    {
+        return $this->body;
     }
 
     public function httpMethod(): ?HttpMethod

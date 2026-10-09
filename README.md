@@ -5,12 +5,13 @@ without SSH, Composer, Node, or a frontend build. It is inspired by Astro's page
 composition and Inertia's separation of pages, data, and presentation;
 it does not implement their compilers or an SPA protocol.
 
-It does not use sessions or provide database support. Pages support
-**GET and HEAD**; other methods receive `405` with `Allow: GET, HEAD`.
+It does not use sessions or provide database support. Explicit routes target
+controller actions and support GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS,
+QUERY, and extension methods. Input validation is not included at this stage.
 
 ## Requirements
 
-- PHP 8.2+, tokenizer, JSON, and PCRE (standard extensions).
+- PHP 8.3+, tokenizer, JSON, and PCRE (standard extensions).
 - Apache with mod_rewrite, mod_authz_core, and appropriate AllowOverride settings,
   or IIS with PHP and URL Rewrite. Other servers require equivalent rules.
 - A private, writable cache for `.arix.php` views. Native `.php` views
@@ -24,7 +25,9 @@ app/
     bootstrap.php         Small, stable bootstrap owned by the application
     config/               Application and cache configuration
     lang/                 Translations
-    pages/                App\Pages\ classes
+    controllers/          App\Controllers\ classes
+    routes.php            Explicit Route declarations
+    services.php          Explicit service and controller factories
     views/                Page views, layouts, partials, and components
 core/                     Replaceable framework, Arix\ namespace
     autoload.php          Framework autoloading and helpers
@@ -77,61 +80,111 @@ Do not use debugging in production:
 it may expose paths, code, and internal messages. Also ensure display_errors=Off
 in the hosting server's PHP configuration for failures before the bootstrap.
 
-## Pages and Routes
+## Controllers and Routes
 
-`app/pages/Index.php`:
+`app/controllers/WelcomeController.php`:
 
 ```php
 <?php
 
 declare(strict_types=1);
 
-namespace App\Pages;
+namespace App\Controllers;
 
-use Arix\Pages\Attributes\Get;
-use Arix\Pages\Contracts\Page;
 use Arix\Views\Contracts\View;
 
-#[Get('/')]
-final class Index implements Page
+final class WelcomeController
 {
-    public function render(): View
+    public function index(): View
     {
         return view('index', ['title' => 'Example', 'description' => '']);
     }
 }
 ```
 
-The attribute determines the URL, not the filename. `#[Get('/')]` responds
-to `/es` and `/en`; `#[Get('/about')]` responds to `/es/about` and `/en/about`.
-The root `/` negotiates Accept-Language and temporarily redirects to a supported language.
-An explicit language in the URL never changes based on the browser's language.
-
-The route must start with `/`, have no trailing slash except for `/`, and contain no
-query string, fragment, or traversal. Duplicates are rejected. HEAD uses the same page and headers
-as GET without emitting a body. Dynamic routes are not supported in this version.
-
-The filename must match the class exactly for autoloading, including on
-case-sensitive systems: `App\Pages\Blog\Article` maps to
-`app/pages/Blog/Article.php`. Avoid classes whose names differ only in case.
-
-The application discovers classes, inspects attributes, and caches a route
-registry. During cold discovery it loads declarations from all page PHP files,
-**but does not instantiate every page**. Those files must therefore
-contain declarations without output or side effects. Abstract classes
-or classes that do not implement `Page` do not publish routes. The registry is invalidated when
-files or the core version change, without mandatory commands in production.
-
-To access the context, the constructor can receive a single `PageContext`:
+`app/routes.php` registers URLs; there is no attribute or page discovery:
 
 ```php
-public function __construct(private readonly \Arix\Routing\PageContext $context)
+use App\Controllers\WelcomeController;
+use Arix\Facades\Route;
+
+Route::get('/', [WelcomeController::class, 'index'])->cache(ttl: 300);
+// Route::post('/contact', [ContactController::class, 'store']);
+```
+
+The facade resolves `RouteCollector` from the active container, following the
+Phenix pattern. Registering routes does not instantiate controllers. Each request
+loads `app/routes.php` again; there is no persistent route cache or compilation.
+
+`app/services.php` returns an explicit registration closure:
+
+```php
+use App\Controllers\WelcomeController;
+use Arix\Container\Container;
+
+return static function (Container $container): void {
+    $container->bind(WelcomeController::class, static fn (): WelcomeController => new WelcomeController());
+};
+```
+
+Only the selected controller is resolved; there is no autowiring or mandatory base
+class. Factories can resolve dependencies with `$container->get()`.
+`RequestContext` is available when the controller is constructed, not during initial
+registration. It provides `request`, `translator`, `path`, `url()`, `asset()`, and `urls()`.
+
+Actions must be public instance methods with zero parameters or exactly one
+required `Arix\Http\Request`. They declare a `Response`, `Arix\Views\Contracts\View`,
+or union return type. `View` becomes HTML; `Response` preserves its status and
+headers. Magic and static actions are not supported.
+
+The `get/post/put/patch/delete/head/options/query` shortcuts and
+`Route::match(['CUSTOM'], '/resource', [Controller::class, 'action'])`
+share the same registry. Methods are case-sensitive. Duplicate method + path
+pairs are rejected; GET and POST can coexist on the same path.
+A missing path returns 404; an undeclared method returns 405 with a route-specific
+Allow header. Explicit HEAD takes precedence; otherwise, GET handles it without
+sending a body. Explicit OPTIONS takes precedence; otherwise, an existing route
+returns 204 with Allow. This does not configure CORS.
+
+URLs are **exactly as declared**: `/` responds directly and `/about` does not become
+`/es/about`. There is no Accept-Language negotiation or language redirect;
+`app.default_locale` selects translations. `/es` exists only if the application
+registers that route. `base_path` still supports subdirectory installations.
+
+Routes are static, absolute, and canonical, without queries, fragments, traversal,
+or trailing slashes except for `/`. A request's trailing slash is canonicalized
+with 308. There are no `{id}` parameters, groups, names, or middleware at this stage.
+Filenames match classes exactly: `App\Controllers\Blog\ArticleController`
+→ `app/controllers/Blog/ArticleController.php`. Symlinks are not supported.
+
+**Breaking migration:** replace `app/pages/`, `Page::render()`, and Get/Cache
+attributes with controllers, `app/routes.php`, bindings in `app/services.php`, and
+`->cache()`. Replace `PageContext` with `RequestContext` and register
+`registerControllers()` in bootstrap. Views do not need conversion. There is no
+page compatibility layer or automatic migration of external applications.
+
+## Request and Body
+
+```php
+public function store(\Arix\Http\Request $request): \Arix\Http\Response
 {
+    $body = $request->body(); // Raw bytes; repeated reads return the same value.
+    return new \Arix\Http\Response('', 204);
 }
 ```
 
-It provides `request`, `translator`, `path`, `url()`, and `asset()`. Page constructors
-follow this contract; arbitrary dependencies are not autowired.
+`body()` does not parse JSON, forms, or files and does not merge query and body.
+The constructor accepts the body as its fifth argument for tests.
+The front controller captures Content-Type/Length and reads up to `max_body_bytes + 1`
+bytes to detect overflow without relying solely on Content-Length.
+`app.max_body_bytes` defaults to 1048576; overflow returns an uncached 413.
+Server/PHP limits and buffering must also be configured.
+
+There are no built-in Form Requests, validation, uploads, sessions, authentication,
+CSRF, or CORS. Multipart is unsupported: PHP may process it before Arix and not
+expose it through `php://input`. Sensitive operations require application protections.
+QUERY requires a compatible server/proxy: the local PHP server used in tests
+rejects it with 501 before executing the router.
 
 ## Container and Helpers
 
@@ -142,13 +195,11 @@ services, factories that do not return objects, and cycles produce explicit erro
 Replacing a registration invalidates its previous instance; a service cannot be replaced
 while it is being resolved. Classes are not instantiated automatically.
 
-The application registers Request, Translator, Config\Repository, PageContext and
-Routing\UrlGenerator (the latter two when resolving a page), FileCache,
-PageRouter, TemplateEngine, and ViewFactory. The translator and rendering engine
-belong to the request; only FileCache is shared across requests
-within the same Application. `view()` resolves ViewFactory and creates a new definition
-with a name and data, without sharing properties between views. `trans()` resolves the
-translator for the URL's language and preserves replacements and fallback behavior:
+The application registers Request, Translator, Config\Repository, RequestContext,
+UrlGenerator, FileCache, RouteCollector, Router, ControllerDispatcher, TemplateEngine
+and ViewFactory. The collector, translator, and engine belong to the request;
+only FileCache is shared across an Application's requests. `view()` creates a new
+definition; `trans()` uses the configured language with replacements and fallback:
 
 ```php
 return view('index', ['title' => trans('home.title')]);
@@ -162,20 +213,18 @@ escape text itself, because it returns text that can also be used outside HTML.
 `config()` queries a read-only repository using dot notation:
 
 ```php
-config('app.locale');                 // Effective language from the URL
+config('app.locale');                 // Configured translation language
 config('app.locales');                // Supported languages
-config('app.default_locale');         // Translation and negotiation fallback
+config('app.default_locale');         // Default translation language
 config('app.name');
 config('app.missing', 'Default');      // Value for missing keys
 config('cache.allow_eval', false);
 config();                            // Full configuration array
 ```
 
-Configuration includes Application overrides. `app.locale` is an effective
-per-request value: before language resolution it uses `app.default_locale`, then
-the explicit language from the URL. It does not modify the file or shared configuration.
-An existing key with a `null` value returns `null`, not the default value.
-Writes through `config()` are not supported.
+Configuration includes Application overrides; `app.locale` uses
+`app.default_locale`, not a URL prefix or the browser's language. An existing
+null value does not use the default. Writes are not supported.
 
 Helpers require an active container during the request. To use them in
 tests or trusted scripts, register services and activate an explicit scope:
@@ -188,7 +237,7 @@ $container->instance(\Arix\Config\Repository::class, new \Arix\Config\Repository
     'app' => ['locale' => $translator->locale, 'locales' => $translator->locales],
 ]));
 $container->instance(\Arix\Routing\UrlGenerator::class, new \Arix\Routing\UrlGenerator(
-    '/site', $translator->locale, $translator->locales, '/about',
+    '/site', '/about',
 ));
 
 \Arix\Container\ContainerContext::run($container, static function () {
@@ -201,13 +250,13 @@ initialization. `ContainerContext::run()` restores the previous context using
 finally, including on errors, redirects, and cache hits. It supports synchronous nested
 scopes; it is not a context for concurrent tasks using fibers or coroutines.
 Within a scope, an unregistered service fails explicitly. Rendering directly with
-TemplateEngine, even when passing PageContext, does not activate a container:
+TemplateEngine, even when passing RequestContext, does not activate a container:
 if the template uses helpers, register their services and activate the scope explicitly.
 
 `Request::httpMethod()` uses the `Arix\Constants\HttpMethod` enum and returns null
 for unknown methods, preserving the original string in `Request::$method`.
-The application only allows GET/HEAD and responds with 405 for other methods. `Response::send()`
-accepts the enum or a string, and HEAD omits the body in both cases.
+The router supports registered methods. `Response::send()` accepts an enum or
+string; HEAD and statuses 204/304 omit the body.
 
 ## Templates
 
@@ -260,7 +309,7 @@ internal `__arix` prefix, and PHP's special names
 for local template variables: it is reserved for the compiler and runtime.
 There is no compatibility alias for `$view`, and a core update does not migrate `app/`.
 
-All templates and pages are trusted code:
+All templates and controllers are trusted code:
 they are not a sandbox for files uploaded by visitors. HTML escaping does not validate
 URLs or replace JavaScript encoding; use `@json` and validate protocols.
 
@@ -270,33 +319,29 @@ engine as a reference, adapting them to native PHP without its dependencies.
 ## Languages and Assets
 
 Configure `locales`, `default_locale`, and `base_path` in `app/config/app.php`.
-Catalogs are in `app/lang/`. Missing messages fall back to the default language
-and then to the key itself. Negotiation respects `q` and variants such as en-US.
-Slugs are shared across languages; there are no translated slugs.
+Catalogs are in `app/lang/`; missing messages use fallback and then the key.
+Translations do not modify URLs or negotiate Accept-Language.
 
 To install under `/site`, set `base_path` to that value. Examples:
 
 ```php
-url('/about');                    // /site/es/about
-url('/about', 'en');              // /site/en/about
-url('/');                        // /site/es
+url('/about');                    // /site/about
+url('/');                        // /site/
 url()->current_path();           // /about (on the about page)
-url()->current();                // /site/es/about, without a query string
-url(url()->current_path(), 'en'); // /site/en/about
+url()->current();                // /site/about, without a query string
+url(url()->current_path());       // /site/about
 asset('styles/app.css');          // /site/styles/app.css
 asset('scripts/app.js');          // /site/scripts/app.js
 asset('assets/images/logo.webp'); // /site/assets/images/logo.webp
 asset('assets/fonts/site.woff2');  // /site/assets/fonts/site.woff2
 ```
 
-`url()` without arguments returns the UrlGenerator service; with a path, it generates
-a localized, origin-relative URL. `current_path()` excludes base_path, language, and
-query string, and encodes its segments for reuse with `url()` without double encoding.
-`url()` accepts internal paths with or without a leading `/`, normalizes the trailing slash,
-validates the language, and rejects protocols, external URLs, query strings, fragments, traversal,
-and ambiguous separators. Segments are decoded once and re-encoded.
-PageContext retains `url()` and `asset()`, delegating to the same generator registered
-in the container, accessible through `PageContext::urls()`.
+`url()` returns UrlGenerator without arguments and generates an internal URL with
+a path. It takes no language argument and adds no language prefixes.
+`current_path()` excludes base_path and query and encodes reusable segments without
+double encoding. The generator retains protocol, traversal, and separator checks.
+`RequestContext::urls()` exposes the container's instance; the context's `url()`
+and `asset()` delegate to it.
 
 CSS and JS are served without transformation. Version their URLs when they change to
 control browser caching. Public directories must contain only
@@ -326,27 +371,23 @@ a logged error and a generic 500 response: it does not silently enable eval.
 `allow_eval => true` explicitly allows compiling and evaluating trusted templates
 in memory if the hosting server permits it. Visitor data is never evaluated.
 
-HTML caching is enabled per page through an attribute:
+HTML caching is enabled only on GET routes:
 
 ```php
-use Arix\Pages\Attributes\Cache;
-
-#[Get('/')]
-#[Cache(ttl: 300, query: ['category'])]
-final class Index implements Page
-{
-    // ...
-}
+Route::get('/', [WelcomeController::class, 'index'])
+    ->cache(ttl: 300, query: ['category']);
 ```
 
-A cache hit does not construct or render the page. Keys include language, route,
-base URL, core version, deployment version, and allowed query parameters. Cookies,
-Authorization, or unknown parameters bypass HTML caching. Do not cache pages
-that depend on IP addresses, other headers, personal data, or values that must be immediately up to date.
+A hit skips controller construction and action execution. Only HTML generated
+from View is stored, not arbitrary Responses. Implicit HEAD shares GET; explicit
+HEAD does not. Cookies, Authorization, unknown query keys, or nonempty bodies
+bypass caching. Keys include configured language, route, selected controller/action,
+base_path, core/deployment version, and query. Do not cache personalization outside
+those factors.
 
-Invalidation detects changes in pages, views, languages, configuration,
-styles, scripts, and assets. It is conservative and computes file hashes: it is suitable for
-small sites, not a constant-cost system for large projects.
+Invalidation includes controllers, routes.php, services.php, views, languages,
+configuration, and assets. It still computes hashes and does not promise constant
+cost. HTTP writes do not automatically invalidate external data changes.
 Writes are atomic; there is no regeneration lock or cache stampede protection.
 Temporary files deleted by the hosting server are regenerated. You can change `version`
 through FTP/the control panel or call `$application->clearCache()` from trusted code,
@@ -358,7 +399,7 @@ without publishing a maintenance endpoint.
    `.htaccess` or `web.config`. Include each directory's protections.
 2. Do not deploy tests or documentation.
 3. Configure the language, base URL, and cache through the control panel/FTP.
-4. Verify `/`, `/es`, `/en/about`, assets, 404, HEAD, and POST 405.
+4. Verify `/`, `/about`, assets, 404, HEAD, OPTIONS, and registered methods.
 5. Verify that `/app/config/app.php` and `/core/functions.php` return 403/404,
    never execute code publicly, and never expose files.
 6. Verify that styles/scripts/assets do not serve hidden or executable files.
@@ -378,8 +419,8 @@ versions while requests are being served or overwrite application files.
 php tests/run.php
 ```
 
-They cover attributes, the route registry, autoloading, languages, HEAD, traversal, caching,
-and templates. To start the development server from the project root:
+Tests cover the collector/facade, controllers, methods, body, autoloading,
+configured translations, path safety, caching, and templates. To start the server:
 
 ```sh
 php -S 127.0.0.1:8080 core/Development/router.php

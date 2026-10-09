@@ -22,7 +22,7 @@ final class Response
             header($name . ': ' . $value);
         }
         $method = is_string($method) ? HttpMethod::tryFrom($method) : $method;
-        if ($method !== HttpMethod::HEAD) {
+        if ($method !== HttpMethod::HEAD && !in_array($this->status, [204, 304], true)) {
             echo $this->body;
         }
     }

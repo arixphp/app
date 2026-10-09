@@ -18,19 +18,20 @@ try {
     /** @var Arix\Application $application */
     $application = require __DIR__ . '/app/bootstrap.php';
 
-    $request = Arix\Http\Request::fromGlobals();
+    $request = Arix\Http\Request::fromGlobals($application->maxBodyBytes());
 
     $application->handle($request)->send($request->method);
 } catch (Throwable $exception) {
     error_log('Arix bootstrap: ' . $exception);
 
-    http_response_code(500);
+    $httpError = $exception instanceof Arix\Http\HttpException;
+    http_response_code($httpError ? $exception->status : 500);
 
     header('Content-Type: text/plain; charset=UTF-8');
     header('Cache-Control: no-store');
     header('X-Content-Type-Options: nosniff');
 
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'HEAD') {
-        echo $debug ? (string) $exception : 'Internal server error.';
+        echo $httpError ? $exception->getMessage() : ($debug ? (string) $exception : 'Internal server error.');
     }
 }

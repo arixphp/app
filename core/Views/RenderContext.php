@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Arix\Views;
 
-use Arix\Routing\PageContext;
+use Arix\Routing\RequestContext;
 use RuntimeException;
 
 final class RenderContext
@@ -18,7 +18,7 @@ final class RenderContext
     public function __construct(
         private readonly TemplateEngine $engine,
         private readonly array $data,
-        private readonly ?PageContext $page,
+        private readonly ?RequestContext $context,
         array $sections = [],
     ) {
         $this->sections = $sections;
@@ -65,7 +65,7 @@ final class RenderContext
 
     public function partial(string $template, array $data = []): string
     {
-        return $this->engine->render($template, array_replace($this->data, $data), $this->page);
+        return $this->engine->render($template, array_replace($this->data, $data), $this->context);
     }
 
     public function startComponent(string $template, array $props = []): void
@@ -93,37 +93,37 @@ final class RenderContext
         [, $slot] = $this->endCapture('component');
         $component = array_pop($this->components);
 
-        return $this->engine->render($component['template'], array_replace($component['props'], $component['slots'], ['slot' => $slot]), $this->page);
+        return $this->engine->render($component['template'], array_replace($component['props'], $component['slots'], ['slot' => $slot]), $this->context);
     }
 
     public function translate(string $key, array $replace = []): string
     {
-        return $this->page?->translator->get($key, $replace) ?? $key;
+        return $this->context?->translator->get($key, $replace) ?? $key;
     }
 
-    public function url(string $path = '/', ?string $locale = null): string
+    public function url(string $path = '/'): string
     {
-        return $this->page?->url($path, $locale) ?? $path;
+        return $this->context?->url($path) ?? $path;
     }
 
     public function asset(string $path): string
     {
-        return $this->page?->asset($path) ?? '/' . ltrim($path, '/');
+        return $this->context?->asset($path) ?? '/' . ltrim($path, '/');
     }
 
     public function locale(): string
     {
-        return $this->page?->translator->locale ?? 'en';
+        return $this->context?->translator->locale ?? 'en';
     }
 
     public function locales(): array
     {
-        return $this->page?->translator->locales ?? ['en'];
+        return $this->context?->translator->locales ?? ['en'];
     }
 
     public function currentPath(): string
     {
-        return $this->page?->path ?? '/';
+        return $this->context?->path ?? '/';
     }
 
     public function finish(string $content): string
@@ -132,7 +132,7 @@ final class RenderContext
             throw new RuntimeException('Unclosed section, component or slot.');
         }
         if ($this->layout !== null) {
-            return $this->engine->render($this->layout, array_replace($this->data, $this->layoutData), $this->page, $this->sections);
+            return $this->engine->render($this->layout, array_replace($this->data, $this->layoutData), $this->context, $this->sections);
         }
 
         return $content;

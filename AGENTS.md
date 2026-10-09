@@ -10,7 +10,7 @@ Sources of truth: `README.md` (usage) and `docs/IMPLEMENTATION.md` (architecture
 - There is no single-test selector, linter, formatter, type checker, CI, or `composer.json`/`package.json`. Do not invent commands or add tooling. To check syntax: `php -l <file>`.
 - Development server (from the root): `php -S 127.0.0.1:8080 core/Development/router.php`. Never use `php -S` without the router: it would not apply `.htaccess`/`web.config`.
 - Debugging: only through the `APP_DEBUG=true|1` environment variable (`APP_DEBUG=true php tests/run.php`). There are no `.env` files.
-- PHP ≥ 8.3 (the local default is 8.4). Although README says 8.2+, `core/Version.php` uses typed class constants (8.3+): parsing fails on PHP 8.2 and 9 tests fail.
+- PHP ≥ 8.3 (the local default is 8.4); `core/Version.php` uses typed class constants.
 - Local PHP prints an Xdebug warning to stderr on every run: this is noise, not a failure.
 
 ## Adding or Changing Tests
@@ -21,22 +21,24 @@ Everything is in `tests/run.php`: `test('name', fn () => ...)` with `check()`, `
 
 - Ownership boundary: `app/` = the user's site (`App\`), `core/` = the replaceable framework (`Arix\`), `styles/ scripts/ assets/` = public directories served directly (no PHP asset endpoint).
 - Entry points: `index.php` → `app/bootstrap.php` → `core/autoload.php`; the development server enters through `core/Development/router.php` → `index.php`.
-- Routes: the `#[Get('/route')]` attribute defines the URL, not the filename. The filename must match the class exactly, including case: `App\Pages\Blog\Article` → `app/pages/Blog/Article.php`.
-- Page files contain declarations only: cold discovery loads them all, without output or side effects.
-- Explicit container, no autowiring: a page constructor accepts 0 parameters or a single `PageContext`.
+- Routes: `app/routes.php` calls `Arix\Facades\Route::get('/route', [Controller::class, 'action'])`. The facade uses the active container's RouteCollector; registration never constructs controllers. The filename must match class/case exactly: `App\Controllers\Blog\ArticleController` → `app/controllers/Blog/ArticleController.php`.
+- `app/services.php` returns a registration closure; explicit bindings only, no autowiring. Actions are public instance methods with zero parameters or one required Request, returning Response or Views\Contracts\View. RequestContext is available when factories resolve, not during initial registration.
+- Controller files contain declarations only; only the selected controller is loaded. Page/attributes/PageContext are removed, without aliases.
+- URLs have no automatic language prefix or negotiation: `/` renders directly, translations use `app.default_locale`. UrlGenerator accepts base_path and current path, not locale arguments.
 - `view()` and `trans()` require an active container (`ContainerContext::run()`); outside a scope they throw `LogicException` (write tests that use them accordingly).
-- GET/HEAD only (405 with `Allow` for other methods). No dynamic routes in this version.
+- GET/HEAD/POST/PUT/PATCH/DELETE/OPTIONS/QUERY and extension methods via match(). Per-path 405/Allow; HEAD falls back to GET; OPTIONS automatic 204 unless explicitly registered. No dynamic routes or middleware. PHP's local server may reject QUERY with 501 before running Arix.
+- Request::body() returns repeatable raw bytes, not parsed or validated data. app.max_body_bytes controls the bounded capture (default 1048576), excess returns 413. No FormRequests, uploads, auth, CSRF or CORS in this stage.
 
 ## Pitfalls
 
 - **Cache versioning (the easiest to get wrong):** cache keys include `Version::ID`, `TemplateCompiler::VERSION`, and file fingerprints, but tests always use a fresh temporary directory, so they **never detect** an outdated version. If you change discovery/rendering logic in `core/`, bump `core/Version.php` (`ID`); if you change `core/Views/TemplateCompiler.php`, bump `TemplateCompiler::VERSION`. Without that bump, existing sites keep serving stale cached content.
 - **Duplicated asset extensions:** the allowlist lives in `core/Http/PublicAssets.php` (used by the development router and tests), in the `.htaccess` files (root, `styles/`, `scripts/`, `assets/`, `assets/fonts/`), and in `web.config`. Changing allowed types = updating PHP + Apache + IIS. `styles/` allows only `.css`, `scripts/` only `.js`; SVG is intentionally excluded.
 - Views: `view('x')` resolves `app/views/x.arix.php` **or** `x.php`, not both (if both exist, it fails). `.arix.php` views are compiled into a private, writable cache; without write access they fail with 500 — do not enable `allow_eval` to hide the problem (disabled by default, only for trusted-code templates).
-- HTML caching (`#[Cache]`, e.g. in `app/pages/Index.php`) is bypassed when cookies, `Authorization`, or unknown query parameters are present, and invalidated by fingerprints of `app/`, `styles/`, `scripts/`, and `assets/`.
+- HTML caching (`Route::get(...)->cache()`) stores View output only and bypasses cookies, Authorization, unknown query parameters and nonempty body. Implicit HEAD shares GET; explicit HEAD does not. Fingerprints include controllers, routes.php, services.php, views, languages, configuration and public assets. Response output and non-GET routes are never stored; HTTP writes do not invalidate external data.
 - Sensitive extensions/files are blocked in `.htaccess`, `web.config`, and `core/Development/router.php`: if you touch routes or assets, verify that all three layers remain aligned.
 
 ## Conventions
 
-- Code comments, messages, and names in English; documentation (`README.md`, `docs/`) in Spanish.
+- Code comments, messages, names, README and documentation in English. Translation catalogs retain their target languages.
 - `declare(strict_types=1)` in all PHP files (except `.arix.php` templates).
 - No commands are run during deployment: do not add build steps or mandatory scripts on the hosting server.

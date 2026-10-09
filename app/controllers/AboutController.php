@@ -2,16 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Pages;
+namespace App\Controllers;
 
-use Arix\Pages\Attributes\Get;
-use Arix\Pages\Contracts\Page;
 use Arix\Views\Contracts\View;
 
-#[Get('/about')]
-final class About implements Page
+final class AboutController
 {
-    public function render(): View
+    public function index(): View
     {
         return view('about', [
             'title' => trans('about.title'),

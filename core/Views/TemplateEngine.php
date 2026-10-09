@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Arix\Views;
 
 use Arix\Cache\FileCache;
-use Arix\Routing\PageContext;
+use Arix\Routing\RequestContext;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -21,7 +21,7 @@ final class TemplateEngine
     ) {
     }
 
-    public function render(string $template, array $data = [], ?PageContext $page = null, array $sections = []): string
+    public function render(string $template, array $data = [], ?RequestContext $context = null, array $sections = []): string
     {
         $this->validateData($data);
         $source = $this->resolve($template);
@@ -31,7 +31,7 @@ final class TemplateEngine
         $this->active[] = $source;
         $level = ob_get_level();
         try {
-            $view = new RenderContext($this, $data, $page, $sections);
+            $view = new RenderContext($this, $data, $context, $sections);
             $code = file_get_contents($source);
             if ($code === false) {
                 throw new RuntimeException('Cannot read template: ' . $template);

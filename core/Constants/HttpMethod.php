@@ -19,4 +19,6 @@ enum HttpMethod: string
     case OPTIONS = 'OPTIONS';
 
     case HEAD = 'HEAD';
+
+    case QUERY = 'QUERY';
 }

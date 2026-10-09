@@ -10,7 +10,8 @@ if ($root === false) {
 }
 require_once dirname(__DIR__) . '/autoload.php';
 try {
-    $path = Arix\Http\Request::fromGlobals()->path();
+    // Validate only the URI here; the front controller owns bounded body capture.
+    $path = (new Arix\Http\Request($_SERVER['REQUEST_METHOD'] ?? 'GET', $_SERVER['REQUEST_URI'] ?? '/'))->path();
 } catch (Arix\Http\HttpException $exception) {
     http_response_code($exception->status);
     return;

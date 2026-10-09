@@ -17,11 +17,11 @@ if (!function_exists('trans')) {
 }
 
 if (!function_exists('url')) {
-    function url(?string $path = null, ?string $locale = null): Arix\Routing\UrlGenerator|string
+    function url(?string $path = null): Arix\Routing\UrlGenerator|string
     {
         $generator = Arix\Container\ContainerContext::current()->get(Arix\Routing\UrlGenerator::class);
 
-        return $path === null ? $generator : $generator->to($path, $locale);
+        return $path === null ? $generator : $generator->to($path);
     }
 }
 

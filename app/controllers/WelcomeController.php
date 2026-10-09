@@ -2,18 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Pages;
+namespace App\Controllers;
 
-use Arix\Pages\Attributes\Cache;
-use Arix\Pages\Attributes\Get;
-use Arix\Pages\Contracts\Page;
 use Arix\Views\Contracts\View;
 
-#[Get('/')]
-#[Cache(ttl: 300)]
-final class Index implements Page
+final class WelcomeController
 {
-    public function render(): View
+    public function index(): View
     {
         return view('index', [
             'title' => trans('home.title'),

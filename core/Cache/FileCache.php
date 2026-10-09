@@ -102,6 +102,10 @@ final class FileCache
     {
         $files = [];
         foreach ($directories as $directory) {
+            if (is_file($directory) && !is_link($directory)) {
+                $files[$directory] = hash_file('sha256', $directory);
+                continue;
+            }
             if (!is_dir($directory)) {
                 continue;
             }

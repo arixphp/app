@@ -7,7 +7,7 @@ namespace Arix\Routing;
 use Arix\Http\Request;
 use Arix\Localization\Translator;
 
-final class PageContext
+final class RequestContext
 {
     private readonly UrlGenerator $urls;
 
@@ -17,12 +17,12 @@ final class PageContext
         public readonly string $path,
         private readonly string $basePath,
     ) {
-        $this->urls = new UrlGenerator($basePath, $translator->locale, $translator->locales, $path);
+        $this->urls = new UrlGenerator($basePath, $path);
     }
 
-    public function url(string $path = '/', ?string $locale = null): string
+    public function url(string $path = '/'): string
     {
-        return $this->urls->to($path, $locale);
+        return $this->urls->to($path);
     }
 
     public function asset(string $path): string

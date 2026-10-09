@@ -13,18 +13,12 @@ final class UrlGenerator
 {
     public function __construct(
         private readonly string $basePath,
-        private readonly string $locale,
-        private readonly array $locales,
         private readonly string $currentPath = '/',
     ) {
     }
 
-    public function to(string $path = '/', ?string $locale = null): string
+    public function to(string $path = '/'): string
     {
-        $locale ??= $this->locale;
-        if (!in_array($locale, $this->locales, true)) {
-            throw new InvalidArgumentException('Unsupported locale.');
-        }
         if (str_contains($path, '?') || str_contains($path, '#') || str_contains($path, ':')) {
             throw new InvalidArgumentException('Expected an internal path without query or fragment.');
         }
@@ -41,12 +35,12 @@ final class UrlGenerator
         $segments = array_map('rawurlencode', explode('/', trim($path, '/')));
         $suffix = implode('/', $segments);
 
-        return rtrim($this->basePath, '/') . '/' . $locale . ($suffix === '' ? '' : '/' . $suffix);
+        return rtrim($this->basePath, '/') . '/' . $suffix;
     }
 
     public function current_path(): string
     {
-        // PageContext paths are decoded; return a reusable URL path.
+        // RequestContext paths are decoded; return a reusable URL path.
         return implode('/', array_map('rawurlencode', explode('/', $this->currentPath)));
     }
 
