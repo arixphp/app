@@ -12,7 +12,7 @@ use function count;
 use function ord;
 use function strlen;
 
-class Str
+class Str extends ForbidInstance
 {
     public static function length(string $value): int
     {

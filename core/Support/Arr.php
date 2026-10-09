@@ -7,7 +7,7 @@ namespace Arix\Support;
 use function is_array;
 use function array_key_exists;
 
-class Arr
+class Arr extends ForbidInstance
 {
     public static function get(array $array, string $key, mixed $default = null): mixed
     {

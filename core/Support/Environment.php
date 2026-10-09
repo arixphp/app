@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Arix\Support;
 
-final class Environment
+use function in_array;
+
+final class Environment extends ForbidInstance
 {
     public static function boolean(string $name): bool
     {
