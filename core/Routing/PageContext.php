@@ -5,36 +5,33 @@ declare(strict_types=1);
 namespace Arix\Routing;
 
 use Arix\Http\Request;
-use Arix\Http\PublicAssets;
 use Arix\Localization\Translator;
 
 final class PageContext
 {
+    private readonly UrlGenerator $urls;
+
     public function __construct(
         public readonly Request $request,
         public readonly Translator $translator,
         public readonly string $path,
         private readonly string $basePath,
     ) {
+        $this->urls = new UrlGenerator($basePath, $translator->locale, $translator->locales, $path);
     }
 
     public function url(string $path = '/', ?string $locale = null): string
     {
-        $locale ??= $this->translator->locale;
-        if (!in_array($locale, $this->translator->locales, true)) {
-            throw new \InvalidArgumentException('Unsupported locale.');
-        }
-
-        return $this->basePath . '/' . $locale . (trim($path, '/') === '' ? '' : '/' . trim($path, '/'));
+        return $this->urls->to($path, $locale);
     }
 
     public function asset(string $path): string
     {
-        $path = ltrim($path, '/');
-        if (!PublicAssets::allows($path)) {
-            throw new \InvalidArgumentException('Invalid public asset path.');
-        }
+        return $this->urls->asset($path);
+    }
 
-        return $this->basePath . '/' . $path;
+    public function urls(): UrlGenerator
+    {
+        return $this->urls;
     }
 }

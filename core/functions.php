@@ -15,3 +15,26 @@ if (!function_exists('trans')) {
         return Arix\Container\ContainerContext::current()->get(Arix\Localization\Translator::class)->get($key, $replace);
     }
 }
+
+if (!function_exists('url')) {
+    function url(?string $path = null, ?string $locale = null): Arix\Routing\UrlGenerator|string
+    {
+        $generator = Arix\Container\ContainerContext::current()->get(Arix\Routing\UrlGenerator::class);
+
+        return $path === null ? $generator : $generator->to($path, $locale);
+    }
+}
+
+if (!function_exists('config')) {
+    function config(?string $key = null, mixed $default = null): mixed
+    {
+        return Arix\Container\ContainerContext::current()->get(Arix\Config\Repository::class)->get($key, $default);
+    }
+}
+
+if (!function_exists('asset')) {
+    function asset(string $path): string
+    {
+        return Arix\Container\ContainerContext::current()->get(Arix\Routing\UrlGenerator::class)->asset($path);
+    }
+}

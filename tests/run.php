@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Arix\Application;
 use Arix\Cache\FileCache;
+use Arix\Config\Repository;
 use Arix\Constants\HttpMethod;
 use Arix\Container\Container;
 use Arix\Container\ContainerContext;
@@ -11,6 +12,8 @@ use Arix\Http\HttpException;
 use Arix\Http\Request;
 use Arix\Localization\Translator;
 use Arix\Routing\PageRouter;
+use Arix\Routing\PageContext;
+use Arix\Routing\UrlGenerator;
 use Arix\Support\Environment;
 use Arix\Views\TemplateCompiler;
 use Arix\Views\TemplateEngine;
@@ -413,22 +416,27 @@ PHP);
         fixture('scoped-site/app/lang/es.php', '<?php return ["hello" => "Hola :name", "markup" => "<b>Español</b>"];');
         fixture('scoped-site/app/lang/en.php', '<?php return ["hello" => "Hello :name", "markup" => "<b>English</b>"];');
         fixture('scoped-site/app/pages/ScopedTestPage.php', '<?php namespace App\\Pages; #[\\Arix\\Pages\\Attributes\\Get("/")] #[\\Arix\\Pages\\Attributes\\Cache(ttl: 300)] final class ScopedTestPage implements \\Arix\\Pages\\Contracts\\Page { public function render(): \\Arix\\Views\\Contracts\\View { $container = \\Arix\\Container\\ContainerContext::current(); $context = $container->get(\\Arix\\Routing\\PageContext::class); $request = $container->get(\\Arix\\Http\\Request::class); if ($request !== $context->request) { throw new \\RuntimeException("Wrong request"); } if (isset($request->query["error"])) { throw new \\RuntimeException("Expected scope test failure"); } return view("index", ["title" => trans("hello", ["name" => "Arix"])]); } }');
-        fixture('scoped-site/app/views/index.arix.php', '{{ $title }}|{{ trans("markup") }}');
+        fixture('scoped-site/app/views/index.arix.php', '{{ $title }}|{{ trans("markup") }}|{{ config("app.locale") }}:{{ url()->current() }}');
         $site = new Application($temporary . '/scoped-site', [], ['path' => $temporary]);
         $outer = new Container();
         $outer->instance(Translator::class, new Translator($temporary . '/scoped-site/app/lang', ['es', 'en'], 'es', 'es'));
+        $outer->instance(Repository::class, new Repository(['app' => ['locale' => 'outer']]));
+        $outer->instance(UrlGenerator::class, new UrlGenerator('/outer', 'es', ['es']));
         ContainerContext::run($outer, function () use ($site, $outer): void {
             foreach (['en', 'es', 'en'] as $locale) {
                 $response = $site->handle(new Request('GET', '/' . $locale));
                 check($response->status === 200);
                 check(str_contains($response->body, $locale === 'en' ? 'Hello Arix' : 'Hola Arix'));
                 check(str_contains($response->body, '&lt;b&gt;'));
+                check(str_ends_with($response->body, "$locale:/$locale"));
                 check(ContainerContext::current() === $outer && trans('hello', ['name' => 'outer']) === 'Hola outer');
+                check(config('app.locale') === 'outer' && url()->current() === '/outer/es');
             }
             foreach ([new Request('GET', '/'), new Request('POST', '/en'), new Request('GET', '/missing'), new Request('GET', '/en', [], ['error' => '1'])] as $request) {
                 $response = $site->handle($request);
                 check(in_array($response->status, [302, 405, 404, 500], true));
                 check(ContainerContext::current() === $outer);
+                check(config('app.locale') === 'outer' && url()->current() === '/outer/es');
             }
         });
         raises(fn () => ContainerContext::current(), LogicException::class);
@@ -436,6 +444,174 @@ PHP);
 
     $cache = new FileCache($temporary, ['path' => $temporary]);
     $engine = new TemplateEngine($temporary . '/views', $cache);
+
+    test('Request services remain coherent across languages applications and HTML cache hits', function () use ($temporary): void {
+        fixture('helper-site/app/config/app.php', '<?php return ["debug" => false, "base_path" => "", "locales" => ["es", "en"], "default_locale" => "es", "name" => "Original"];');
+        fixture('helper-site/app/config/cache.php', '<?php return ["version" => "helper-test"];');
+        fixture('helper-site/app/lang/es.php', '<?php return ["hello" => "Hola"];');
+        fixture('helper-site/app/lang/en.php', '<?php return ["hello" => "Hello"];');
+        fixture('helper-site/app/pages/ScopedHelpersPage.php', <<<'PHP'
+<?php
+declare(strict_types=1);
+namespace App\Pages;
+#[\Arix\Pages\Attributes\Get('/about')]
+#[\Arix\Pages\Attributes\Cache(ttl: 300)]
+final class ScopedHelpersPage implements \Arix\Pages\Contracts\Page
+{
+    public function __construct(\Arix\Routing\PageContext $context)
+    {
+        if (config('app.locale') !== $context->translator->locale || url() !== $context->urls()) {
+            throw new \RuntimeException('Incoherent request services.');
+        }
+    }
+
+    public function render(): \Arix\Views\Contracts\View
+    {
+        return view('index', ['view' => 'grid']);
+    }
+}
+PHP);
+        fixture('helper-site/app/views/index.arix.php', '@extends("layout")@section("body")@include("partial")|@component("component"){{ $view }}@endcomponent@endsection');
+        fixture('helper-site/app/views/layout.arix.php', '{{ config("app.name") }}|{{ config("app.locale") }}|{{ config("app.default_locale") }}|{{ url()->current_path() }}|{{ url()->current() }}|{{ asset("styles/app.css") }}|@yield("body")');
+        fixture('helper-site/app/views/partial.arix.php', '{{ trans("hello") }}:{{ implode(",", config("app.locales")) }}');
+        fixture('helper-site/app/views/component.arix.php', '{{ url(url()->current_path(), "en") }}:{!! $slot !!}');
+        $first = new Application($temporary . '/helper-site', ['name' => 'First', 'base_path' => '/first'], ['path' => $temporary, 'version' => 'first']);
+        $second = new Application($temporary . '/helper-site', ['name' => 'Second', 'base_path' => '/second', 'default_locale' => 'en'], ['path' => $temporary, 'version' => 'second']);
+        $outer = new Container();
+        $outer->instance(Repository::class, new Repository(['app' => ['locale' => 'outer']]));
+        $outer->instance(UrlGenerator::class, new UrlGenerator('/outer', 'es', ['es']));
+        ContainerContext::run($outer, function () use ($first, $second): void {
+            foreach (['es', 'en', 'es'] as $locale) {
+                foreach ([[$first, 'First', '/first', 'es'], [$second, 'Second', '/second', 'en']] as [$site, $name, $base, $default]) {
+                    $expected = "$name|$locale|$default|/about|$base/$locale/about|$base/styles/app.css|" . ($locale === 'es' ? 'Hola' : 'Hello') . ":es,en|$base/en/about:grid";
+                    for ($hit = 0; $hit < 2; $hit++) {
+                        $response = $site->handle(new Request('GET', "$base/$locale/about"));
+                        check($response->status === 200 && $response->body === $expected, $response->body);
+                        check(config('app.locale') === 'outer' && url()->current() === '/outer/es');
+                    }
+                }
+            }
+        });
+        raises(fn () => url(), LogicException::class);
+    });
+
+    test('Configuration repository preserves null and supports dotted keys and defaults', function (): void {
+        $values = ['app' => ['locale' => 'es', 'locales' => ['es', 'en'], 'nullable' => null, 'debug' => false]];
+        $repository = new Repository($values);
+        check($repository->get() === $values);
+        check($repository->get('app.locale') === 'es');
+        check($repository->get('app.locales') === ['es', 'en']);
+        check($repository->get('app.nullable', 'fallback') === null);
+        check($repository->get('app.debug', true) === false);
+        check($repository->get('app.missing', 'fallback') === 'fallback');
+        check($repository->get('app.locale.nested', 'fallback') === 'fallback');
+    });
+
+    test('URL generator localizes internal paths and delegates PageContext consistently', function () use ($root): void {
+        $translator = new Translator($root . '/app/lang', ['es', 'en'], 'es', 'en');
+        $context = new PageContext(new Request('GET', '/site/en/about?x=1'), $translator, '/about', '/site');
+        $urls = $context->urls();
+        check($urls->to('/') === '/site/en');
+        check($urls->to('about') === '/site/en/about');
+        check($urls->to('/about/', 'es') === '/site/es/about');
+        check($urls->current_path() === '/about');
+        check($urls->current() === '/site/en/about');
+        check($urls->to($urls->current_path(), 'es') === '/site/es/about');
+        check($context->url('/about', 'es') === $urls->to('/about', 'es'));
+        check($context->asset('styles/app.css') === $urls->asset('styles/app.css'));
+        check((new UrlGenerator('', 'es', ['es'], '/'))->current() === '/es');
+        $encoded = new UrlGenerator('', 'es', ['es'], '/café/100%');
+        check($encoded->current_path() === '/caf%C3%A9/100%25');
+        check($encoded->current() === '/es/caf%C3%A9/100%25');
+        check($encoded->to($encoded->current_path()) === $encoded->current());
+        foreach (['https://example.com', '//example.com', '../secret', '/a/../b', '/%2e%2e/b', '/a//b', '/a\\b', '/%2fb', '/%5cb', '/bad%', '/x?y=1', '/x#y', '/%3f', '/%00', '/.hidden'] as $path) {
+            raises(fn () => $urls->to($path), InvalidArgumentException::class);
+        }
+        raises(fn () => $urls->to('/', 'fr'), InvalidArgumentException::class);
+        foreach (['app/config/app.php', 'styles/file.php', 'assets/logo.svg', '../styles/app.css'] as $path) {
+            raises(fn () => $urls->asset($path), InvalidArgumentException::class);
+        }
+    });
+
+    test('URL config and asset helpers use explicit nested container scopes', function () use ($engine, $temporary): void {
+        foreach ([fn () => url(), fn () => config(), fn () => asset('styles/app.css')] as $helper) {
+            raises($helper, LogicException::class);
+        }
+        $outer = new Container();
+        $outerUrls = new UrlGenerator('/site', 'es', ['es', 'en'], '/about');
+        $outer->instance(UrlGenerator::class, $outerUrls);
+        $outer->instance(Repository::class, new Repository(['app' => ['locale' => 'es', 'locales' => ['es', 'en']]]));
+        $inner = new Container();
+        $inner->instance(UrlGenerator::class, new UrlGenerator('', 'en', ['es', 'en']));
+        $inner->instance(Repository::class, new Repository(['app' => ['locale' => 'en']]));
+        fixture('views/helpers.arix.php', '{{ config("app.locale") }}|{{ url()->current_path() }}|{{ url()->current() }}|{{ url("/", "en") }}|{{ asset("styles/app.css") }}');
+        fixture('views/helpers-native.php', '<?php declare(strict_types=1); echo $this->escape(config("app.locale")) . "|" . url()->current();');
+        ContainerContext::run($outer, function () use ($outerUrls, $outer, $inner, $engine, $temporary): void {
+            check(url() === $outerUrls);
+            check(config('app.locales') === ['es', 'en']);
+            check($engine->render('helpers') === 'es|/about|/site/es/about|/site/en|/site/styles/app.css');
+            check($engine->render('helpers-native') === 'es|/site/es/about');
+            $eval = new TemplateEngine($temporary . '/views', new FileCache($temporary, ['enabled' => false]), allowEval: true);
+            check($eval->render('helpers') === 'es|/about|/site/es/about|/site/en|/site/styles/app.css');
+            raises(fn () => ContainerContext::run($inner, function (): void {
+                check(config('app.locale') === 'en' && url()->current() === '/en');
+                throw new RuntimeException('Expected nested scope failure.');
+            }));
+            check(ContainerContext::current() === $outer);
+            check(config('app.locale') === 'es' && url() === $outerUrls);
+        });
+        $level = ob_get_level();
+        raises(fn () => $engine->render('helpers'), LogicException::class);
+        check(ob_get_level() === $level);
+        raises(fn () => config(), LogicException::class);
+    });
+
+    test('Template data no longer collides with execution variables in compiled native and eval views', function () use ($engine, $temporary): void {
+        $data = ['view' => '<grid>', 'data' => 'data', 'path' => 'path', 'fallback' => 'fallback', 'allowEval' => 'allowEval'];
+        fixture('views/free-variables.arix.php', '{{ $view }}|{{ $data }}|{{ $path }}|{{ $fallback }}|{{ $allowEval }}|@json($view)');
+        $expected = '&lt;grid&gt;|data|path|fallback|allowEval|"\\u003Cgrid\\u003E"';
+        check($engine->render('free-variables', $data) === $expected);
+        check($engine->render('free-variables', $data) === $expected);
+        fixture('views/free-native.php', '<?php declare(strict_types=1); echo $this->escape($view) . "|" . $data . "|" . $path . "|" . $fallback . "|" . $allowEval;');
+        check($engine->render('free-native', $data) === '&lt;grid&gt;|data|path|fallback|allowEval');
+        $eval = new TemplateEngine($temporary . '/views', new FileCache($temporary, ['enabled' => false]), allowEval: true);
+        check($eval->render('free-variables', $data) === $expected);
+        check($eval->render('free-native', $data) === '&lt;grid&gt;|data|path|fallback|allowEval');
+        fixture('views/loop-variable.arix.php', '@foreach($items as $view){{ $view }}@endforeach|@if($view === "<two>")@json($view)@endif|<?php $view = "<native>"; ?>{{ $view }}');
+        $loopExpected = '&lt;one&gt;&lt;two&gt;|"\\u003Ctwo\\u003E"|&lt;native&gt;';
+        check($engine->render('loop-variable', ['items' => ['<one>', '<two>']]) === $loopExpected);
+        check($eval->render('loop-variable', ['items' => ['<one>', '<two>']]) === $loopExpected);
+    });
+
+    test('Free variable names propagate through layouts partials props and slots', function () use ($engine): void {
+        fixture('views/free-layout.arix.php', '{{ $view }}|@yield("body")');
+        fixture('views/free-partial.arix.php', '{{ $view }}:{{ $path }}');
+        fixture('views/free-component.arix.php', '{{ $view }}:{!! $path !!}:{!! $slot !!}');
+        fixture('views/free-tree.arix.php', '@extends("free-layout", ["view" => "layout"])@section("body")@include("free-partial", ["view" => "partial"])|@component("free-component", ["view" => "prop", "path" => "overridden"])@slot("path")<b>slot</b>@endslot default@endcomponent@endsection');
+        check($engine->render('free-tree', ['view' => 'page', 'path' => 'data']) === 'layout|partial:data|prop:<b>slot</b>: default');
+        fixture('views/native-layout.php', '<?php declare(strict_types=1); echo $this->escape($view); echo $this->yieldSection("body");');
+        fixture('views/native-child.php', '<?php declare(strict_types=1); $this->extend("native-layout"); $this->startSection("body"); echo $this->escape($path); $this->endSection();');
+        check($engine->render('native-child', ['view' => '<layout>', 'path' => '<body>']) === '&lt;layout&gt;&lt;body&gt;');
+    });
+
+    test('Template data validation rejects reserved and invalid keys without leaking state', function () use ($engine): void {
+        fixture('views/valid-data.arix.php', '{{ $view }}');
+        foreach (['__arix', '__arixContext', '__arixPath', 'this', 'GLOBALS', 'bad-key', 'with space', '1value', '', 0] as $key) {
+            $level = ob_get_level();
+            raises(fn () => $engine->render('valid-data', [$key => 'value']), InvalidArgumentException::class);
+            check(ob_get_level() === $level);
+        }
+        fixture('views/reserved-partial.arix.php', '@include("valid-data", ["__arixPath" => "bad"])');
+        fixture('views/reserved-component.arix.php', '@component("valid-data", ["__arixContext" => "bad"])text@endcomponent');
+        fixture('views/reserved-slot.arix.php', '@component("valid-data")@slot("__arixData")bad@endslot@endcomponent');
+        fixture('views/reserved-layout.arix.php', '@extends("valid-data", ["__arixAllowEval" => true])');
+        foreach (['reserved-partial', 'reserved-component', 'reserved-slot', 'reserved-layout'] as $name) {
+            $level = ob_get_level();
+            raises(fn () => $engine->render($name), InvalidArgumentException::class);
+            check(ob_get_level() === $level);
+        }
+        check($engine->render('valid-data', ['view' => 'restored']) === 'restored');
+    });
 
     test('Balanced expressions, escaping, raw output and native PHP', function () use ($engine): void {
         fixture('views/expression.arix.php', '{{ strtoupper(trim($value)) }}|{{ "}}" }}|{!! $html !!}|@if(strlen(trim($value)) > 0)yes@endif|<?php echo "@if(foo)"; ?>');
@@ -495,7 +671,7 @@ PHP);
 
     test('Rendering works without persistent cache, including strict native PHP', function () use ($temporary, $root): void {
         $engine = new TemplateEngine($temporary . '/views', new FileCache($temporary, ['enabled' => false]), allowEval: true);
-        fixture('views/native.php', '<?php declare(strict_types=1); echo $view->escape($value);');
+        fixture('views/native.php', '<?php declare(strict_types=1); echo $this->escape($value);');
         check($engine->render('native', ['value' => '<x>']) === '&lt;x&gt;');
         check($engine->render('nested') === '<main><div><aside>&lt;x&gt;:<b>Title</b>: Text</aside></div></main>');
         $app = new Application($root, [], ['enabled' => false, 'allow_eval' => true]);
@@ -511,6 +687,8 @@ PHP);
     test('Native templates preserve their original directory with cache enabled', function () use ($engine, $temporary): void {
         $file = fixture('views/directory.php', '<?php declare(strict_types=1); echo __DIR__;');
         check($engine->render('directory') === dirname(realpath($file)));
+        $file = fixture('views/source-file.php', '<?php declare(strict_types=1); echo __FILE__;');
+        check($engine->render('source-file') === realpath($file));
     });
 
     test('File cache is atomic, installation-specific and clears only its own files', function () use ($cache, $temporary): void {

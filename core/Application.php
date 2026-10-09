@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Arix;
 
 use Arix\Cache\FileCache;
+use Arix\Config\Repository;
 use Arix\Constants\HttpMethod;
 use Arix\Container\Container;
 use Arix\Container\ContainerContext;
@@ -15,6 +16,7 @@ use Arix\Localization\Translator;
 use Arix\Pages\PageFactory;
 use Arix\Routing\PageContext;
 use Arix\Routing\PageRouter;
+use Arix\Routing\UrlGenerator;
 use Arix\Views\TemplateEngine;
 use Arix\Views\ViewFactory;
 use Throwable;
@@ -42,6 +44,7 @@ final class Application
     private function createContainer(Request $request): Container
     {
         $container = new Container();
+        $container->instance(Repository::class, $this->configuration($this->config['default_locale']));
         $container->instance(Request::class, $request);
         $container->instance(FileCache::class, $this->cache);
         $container->singleton(ViewFactory::class, static fn (): ViewFactory => new ViewFactory());
@@ -59,6 +62,14 @@ final class Application
     private function translator(string $locale): Translator
     {
         return new Translator($this->root . '/app/lang', $this->config['locales'], $this->config['default_locale'], $locale);
+    }
+
+    private function configuration(string $locale): Repository
+    {
+        return new Repository([
+            'app' => array_replace($this->config, ['locale' => $locale]),
+            'cache' => $this->cacheConfig,
+        ]);
     }
 
     private function dispatch(Request $request, Container $container): Response
@@ -87,8 +98,10 @@ final class Application
             $pagePath = '/' . implode('/', $segments);
             $translator = $this->translator($locale);
             $container->instance(Translator::class, $translator);
+            $container->instance(Repository::class, $this->configuration($locale));
             $context = new PageContext($request, $translator, $pagePath, $base);
             $container->instance(PageContext::class, $context);
+            $container->instance(UrlGenerator::class, $context->urls());
             $route = $container->get(PageRouter::class)->resolve($pagePath);
             $ttl = $route['cache']['ttl'];
             $queryKeys = $route['cache']['query'];

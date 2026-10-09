@@ -6,6 +6,7 @@ namespace Arix\Views;
 
 use Arix\Cache\FileCache;
 use Arix\Routing\PageContext;
+use InvalidArgumentException;
 use RuntimeException;
 
 final class TemplateEngine
@@ -22,6 +23,7 @@ final class TemplateEngine
 
     public function render(string $template, array $data = [], ?PageContext $page = null, array $sections = []): string
     {
+        $this->validateData($data);
         $source = $this->resolve($template);
         if (in_array($source, $this->active, true) || count($this->active) >= 64) {
             throw new RuntimeException('Circular or excessively nested template: ' . $template);
@@ -48,19 +50,21 @@ final class TemplateEngine
             // Lazy fallback also handles a concurrent clear, without compiling cache hits.
             $fallback = static fn (): string => $compiled ?? $compiler->compile($code);
             ob_start();
-            (static function (RenderContext $view, array $data, ?string $path, \Closure $fallback) use ($allowEval): void {
-                extract($data, EXTR_SKIP);
-                if ($path !== null && is_file($path)) {
-                    require $path;
+            // Bind native composition to $this; extracted data never owns the runtime.
+            $execute = (function (RenderContext $__arixContext, array $__arixData, ?string $__arixPath, \Closure $__arixFallback, bool $__arixAllowEval): void {
+                extract($__arixData, EXTR_SKIP);
+                if ($__arixPath !== null && is_file($__arixPath)) {
+                    require $__arixPath;
                 } else {
-                    if (!$allowEval) {
+                    if (!$__arixAllowEval) {
                         throw new RuntimeException('Compiled templates require writable private cache. Use native PHP templates or explicitly enable allow_eval.');
                     }
                     // Only trusted application templates are evaluated, never request data.
                     // Keeps rendering available when shared hosting forbids persistent cache.
-                    eval('?>' . $fallback());
+                    eval('?>' . $__arixFallback());
                 }
-            })($view, $data, $path, $fallback);
+            })->bindTo($view, RenderContext::class);
+            $execute($view, $data, $path, $fallback, $allowEval);
             if (ob_get_level() !== $level + 1) {
                 throw new RuntimeException('Unclosed template buffer.');
             }
@@ -71,6 +75,18 @@ final class TemplateEngine
                 ob_end_clean();
             }
             array_pop($this->active);
+        }
+    }
+
+    private function validateData(array $data): void
+    {
+        foreach ($data as $name => $_) {
+            if (!is_string($name) || !preg_match('/^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$/D', $name)) {
+                throw new InvalidArgumentException('Template data keys must be valid PHP variable names.');
+            }
+            if (str_starts_with($name, '__arix') || in_array($name, ['this', 'GLOBALS'], true)) {
+                throw new InvalidArgumentException('Reserved template variable: ' . $name);
+            }
         }
     }
 

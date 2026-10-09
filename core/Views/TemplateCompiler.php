@@ -8,7 +8,7 @@ use RuntimeException;
 
 final class TemplateCompiler
 {
-    public const VERSION = '2';
+    public const VERSION = '3';
 
     public function compile(string $source): string
     {
@@ -39,7 +39,7 @@ final class TemplateCompiler
             if (substr($text, $index, 2) === '{{' || substr($text, $index, 3) === '{!!') {
                 $raw = substr($text, $index, 3) === '{!!';
                 [$expression, $index] = $this->expression($text, $index + ($raw ? 3 : 2), $raw ? '!!}' : '}}');
-                $output .= $raw ? '<?= ' . $expression . ' ?>' : '<?= $view->escape(' . $expression . ') ?>';
+                $output .= $raw ? '<?= ' . $expression . ' ?>' : '<?= $__arixContext->escape(' . $expression . ') ?>';
                 continue;
             }
             if (substr($text, $index, 2) === '@@') {
@@ -55,9 +55,9 @@ final class TemplateCompiler
                     'endforeach' => '<?php endforeach; ?>',
                     'endfor' => '<?php endfor; ?>',
                     'endwhile' => '<?php endwhile; ?>',
-                    'endsection' => '<?php $view->endSection(); ?>',
-                    'endcomponent' => '<?= $view->endComponent() ?>',
-                    'endslot' => '<?php $view->endSlot(); ?>',
+                    'endsection' => '<?php $__arixContext->endSection(); ?>',
+                    'endcomponent' => '<?= $__arixContext->endComponent() ?>',
+                    'endslot' => '<?php $__arixContext->endSlot(); ?>',
                 ];
                 $argumentNames = ['if', 'elseif', 'foreach', 'for', 'while', 'extends', 'section', 'yield', 'include', 'component', 'slot', 'json'];
                 if (isset($simple[$name])) {
@@ -76,13 +76,13 @@ final class TemplateCompiler
                     [$expression, $index] = $this->expression($text, $start + 1, ')');
                     $output .= match ($name) {
                         'if', 'elseif', 'foreach', 'for', 'while' => '<?php ' . $name . ' (' . $expression . '): ?>',
-                        'extends' => '<?php $view->extend(' . $expression . '); ?>',
-                        'section' => '<?php $view->startSection(' . $expression . '); ?>',
-                        'yield' => '<?= $view->yieldSection(' . $expression . ') ?>',
-                        'include' => '<?= $view->partial(' . $expression . ') ?>',
-                        'component' => '<?php $view->startComponent(' . $expression . '); ?>',
-                        'slot' => '<?php $view->startSlot(' . $expression . '); ?>',
-                        'json' => '<?= $view->json(' . $expression . ') ?>',
+                        'extends' => '<?php $__arixContext->extend(' . $expression . '); ?>',
+                        'section' => '<?php $__arixContext->startSection(' . $expression . '); ?>',
+                        'yield' => '<?= $__arixContext->yieldSection(' . $expression . ') ?>',
+                        'include' => '<?= $__arixContext->partial(' . $expression . ') ?>',
+                        'component' => '<?php $__arixContext->startComponent(' . $expression . '); ?>',
+                        'slot' => '<?php $__arixContext->startSlot(' . $expression . '); ?>',
+                        'json' => '<?= $__arixContext->json(' . $expression . ') ?>',
                     };
                     continue;
                 }
