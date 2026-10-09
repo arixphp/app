@@ -9,16 +9,17 @@
     @foreach(config('app.locales') as $language)
         <link rel="alternate" hreflang="{{ $language }}" href="{{ url(url()->current_path(), $language) }}">
     @endforeach
-    <link rel="stylesheet" href="{{ asset('styles/app.css') }}?v=2">
+    <link rel="stylesheet" href="{{ asset('styles/app.css') }}?v=3">
     <script src="{{ asset('scripts/htmx.js') }}?v=2.0.11" defer></script>
     <script src="{{ asset('scripts/app.js') }}?v=1" defer></script>
 </head>
 <body>
+    <a class="skip-link" href="#main-content">{{ trans('nav.skip') }}</a>
     <header>
         <a class="brand" href="{{ url('/') }}">ArixPHP</a>
         @include('partials.navigation')
     </header>
-    <main>@yield('content')</main>
+    <main id="main-content" tabindex="-1">@yield('content')</main>
     <footer>{{ trans('footer') }}</footer>
 </body>
 </html>
