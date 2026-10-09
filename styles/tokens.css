@@ -1,0 +1,179 @@
+/*
+ * Arix CSS · tokens (theme layer)
+ *
+ * Raw palettes (hex, supported by every browser) + OKLCH overrides inside
+ * @supports, as the Pico maintainer suggests: modern CSS with fallbacks.
+ * Theme blocks only reassign the semantic aliases (--color-*) to one of the
+ * two palettes.
+ *
+ * Breakpoints (var() cannot be used in @media; the literal values are
+ * repeated in utilities.css):
+ *   --bp-sm: 40rem (640px)   --bp-md: 48rem (768px)
+ *   --bp-lg: 64rem (1024px)  --bp-xl: 80rem (1280px)
+ */
+@layer theme {
+    :root {
+        /* ---- typography ---- */
+        --font-sans: system-ui, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
+            Helvetica, Arial, "Helvetica Neue", sans-serif;
+        --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+            "Liberation Mono", monospace;
+        --text-xs: 0.75rem;
+        --text-sm: 0.875rem;
+        --text-base: 1rem;
+        --text-lg: 1.125rem;
+        --text-xl: 1.25rem;
+        --text-2xl: 1.5rem;
+        --text-3xl: 1.875rem;
+        --font-normal: 400;
+        --font-medium: 500;
+        --font-semibold: 600;
+        --font-bold: 700;
+
+        /* ---- spacing (4px scale) ---- */
+        --space-0: 0;
+        --space-1: 0.25rem;
+        --space-2: 0.5rem;
+        --space-3: 0.75rem;
+        --space-4: 1rem;
+        --space-5: 1.25rem;
+        --space-6: 1.5rem;
+        --space-8: 2rem;
+        --space-10: 2.5rem;
+        --space-12: 3rem;
+        --space-16: 4rem;
+        --space-24: 6rem;
+        --space-32: 8rem;
+
+        /* ---- radii ---- */
+        --radius-sm: 0.375rem;
+        --radius-md: 0.5rem;
+        --radius-lg: 0.8rem;
+        --radius-xl: 1.25rem;
+        --radius-full: 9999px;
+
+        /* ---- shadows ---- */
+        --shadow-sm: 0 1px 2px rgb(16 24 32 / 0.06);
+        --shadow-md: 0 4px 12px rgb(16 24 32 / 0.1);
+
+        /* ---- motion ---- */
+        --duration: 0.2s;
+        --ease: ease-in-out;
+
+        /* ---- light palette (hex, universal fallback) ---- */
+        --palette-light-bg: #f5f8f9;
+        --palette-light-surface: #ffffff;
+        --palette-light-text: #16232b;
+        --palette-light-muted: #4c5f6b;
+        --palette-light-border: #d2dce2;
+        --palette-light-accent: #0e8c6f;
+        --palette-light-accent-hover: #0a745b;
+        --palette-light-on-accent: #ffffff;
+        --palette-light-danger: #b42318;
+        --palette-light-success: #067647;
+        --palette-light-selection: rgb(14 140 111 / 0.25);
+
+        /* ---- dark palette (hex, universal fallback) ---- */
+        --palette-dark-bg: #101820;
+        --palette-dark-surface: #16202a;
+        --palette-dark-text: #eaf2f5;
+        --palette-dark-muted: #c3d4df;
+        --palette-dark-border: #38505e;
+        --palette-dark-accent: #80e8c7;
+        --palette-dark-accent-hover: #a5f3dc;
+        --palette-dark-on-accent: #08201a;
+        --palette-dark-danger: #f97066;
+        --palette-dark-success: #3ecf8e;
+        --palette-dark-selection: rgb(128 232 199 / 0.25);
+
+        /* ---- semantic aliases: light by default ---- */
+        color-scheme: light;
+        --color-bg: var(--palette-light-bg);
+        --color-surface: var(--palette-light-surface);
+        --color-text: var(--palette-light-text);
+        --color-muted: var(--palette-light-muted);
+        --color-border: var(--palette-light-border);
+        --color-accent: var(--palette-light-accent);
+        --color-accent-hover: var(--palette-light-accent-hover);
+        --color-on-accent: var(--palette-light-on-accent);
+        --color-danger: var(--palette-light-danger);
+        --color-success: var(--palette-light-success);
+        --color-selection: var(--palette-light-selection);
+    }
+
+    /* ---- OKLCH values only where the browser understands them ---- */
+    @supports (color: oklch(0 0 0)) {
+        :root {
+            --palette-light-bg: oklch(0.974 0.005 220);
+            --palette-light-surface: oklch(1 0 0);
+            --palette-light-text: oklch(0.243 0.019 240);
+            --palette-light-muted: oklch(0.452 0.031 234);
+            --palette-light-border: oklch(0.888 0.014 230);
+            --palette-light-accent: oklch(0.576 0.116 170);
+            --palette-light-accent-hover: oklch(0.497 0.101 170);
+            --palette-light-on-accent: oklch(1 0 0);
+            --palette-light-danger: oklch(0.505 0.165 27);
+            --palette-light-success: oklch(0.527 0.119 163);
+
+            --palette-dark-bg: oklch(0.209 0.024 250);
+            --palette-dark-surface: oklch(0.267 0.024 250);
+            --palette-dark-text: oklch(0.951 0.01 232);
+            --palette-dark-muted: oklch(0.851 0.026 234);
+            --palette-dark-border: oklch(0.373 0.038 239);
+            --palette-dark-accent: oklch(0.845 0.125 170);
+            --palette-dark-accent-hover: oklch(0.914 0.095 172);
+            --palette-dark-on-accent: oklch(0.22 0.03 175);
+            --palette-dark-danger: oklch(0.673 0.186 24);
+            --palette-dark-success: oklch(0.734 0.154 162);
+        }
+    }
+
+    /* ---- dark per system, unless the document forces light ---- */
+    @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+            color-scheme: dark;
+            --color-bg: var(--palette-dark-bg);
+            --color-surface: var(--palette-dark-surface);
+            --color-text: var(--palette-dark-text);
+            --color-muted: var(--palette-dark-muted);
+            --color-border: var(--palette-dark-border);
+            --color-accent: var(--palette-dark-accent);
+            --color-accent-hover: var(--palette-dark-accent-hover);
+            --color-on-accent: var(--palette-dark-on-accent);
+            --color-danger: var(--palette-dark-danger);
+            --color-success: var(--palette-dark-success);
+            --color-selection: var(--palette-dark-selection);
+        }
+    }
+
+    /* ---- force theme via <html data-theme="dark|light"> ---- */
+    [data-theme="dark"] {
+        color-scheme: dark;
+        --color-bg: var(--palette-dark-bg);
+        --color-surface: var(--palette-dark-surface);
+        --color-text: var(--palette-dark-text);
+        --color-muted: var(--palette-dark-muted);
+        --color-border: var(--palette-dark-border);
+        --color-accent: var(--palette-dark-accent);
+        --color-accent-hover: var(--palette-dark-accent-hover);
+        --color-on-accent: var(--palette-dark-on-accent);
+        --color-danger: var(--palette-dark-danger);
+        --color-success: var(--palette-dark-success);
+        --color-selection: var(--palette-dark-selection);
+    }
+
+    [data-theme="light"] {
+        color-scheme: light;
+        --color-bg: var(--palette-light-bg);
+        --color-surface: var(--palette-light-surface);
+        --color-text: var(--palette-light-text);
+        --color-muted: var(--palette-light-muted);
+        --color-border: var(--palette-light-border);
+        --color-accent: var(--palette-light-accent);
+        --color-accent-hover: var(--palette-light-accent-hover);
+        --color-on-accent: var(--palette-light-on-accent);
+        --color-danger: var(--palette-light-danger);
+        --color-success: var(--palette-light-success);
+        --color-selection: var(--palette-light-selection);
+    }
+}

@@ -1,0 +1,5 @@
+# Inherit the static-media protections and MIME types from assets/.htaccess.
+# This subdirectory is restricted further to font formats only.
+<FilesMatch "(?i)^(?![A-Za-z0-9_-]+\.(?:woff2?|ttf|otf)$)">
+    Require all denied
+</FilesMatch>

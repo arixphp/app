@@ -1,0 +1,24 @@
+Options -Indexes -ExecCGI -MultiViews
+RemoveHandler .php .php3 .php4 .php5 .php7 .php8 .phtml .phar .cgi .pl .py .sh
+
+# Only static media; hidden files, multiple extensions and executable files are denied.
+# SVG is intentionally excluded because it can contain scripts and external content.
+<FilesMatch "(?i)^(?![A-Za-z0-9_-]+\.(?:avif|gif|ico|jpe?g|png|webp|mp4|webm|ogv|woff2?|ttf|otf)$)">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_mime.c>
+    AddType image/avif .avif
+    AddType image/webp .webp
+    AddType video/mp4 .mp4
+    AddType video/webm .webm
+    AddType video/ogg .ogv
+    AddType font/woff .woff
+    AddType font/woff2 .woff2
+    AddType font/ttf .ttf
+    AddType font/otf .otf
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+</IfModule>

@@ -1,0 +1,16 @@
+@charset "UTF-8";
+
+/*
+ * Arix CSS · entry point (no build, native CSS)
+ * Tailwind-inspired (utilities + layers) but written by hand.
+ * Layer order: theme < base < components < utilities.
+ * Each partial wraps its rules in @layer; the @import rules are plain so a
+ * browser without cascade layers degrades by source order with the same
+ * precedence.
+ */
+@layer theme, base, components, utilities;
+
+@import url("tokens.css");
+@import url("base.css");
+@import url("components.css");
+@import url("utilities.css");

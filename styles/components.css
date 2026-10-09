@@ -1,0 +1,122 @@
+/*
+ * Arix CSS · components (components layer)
+ * Application look: page shell, header, navigation, card and reusable
+ * classes. Everything driven by tokens (--color-*, --space-*).
+ */
+@layer components {
+    /* ---- page shell (the body is the container, as in app.css) ---- */
+    body {
+        max-width: 68rem;
+        margin-inline: auto;
+        padding: var(--space-6);
+    }
+
+    .container {
+        width: 100%;
+        max-width: 68rem;
+        margin-inline: auto;
+        padding-inline: var(--space-6);
+    }
+
+    header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-4);
+        flex-wrap: wrap;
+    }
+
+    nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-4);
+    }
+
+    main {
+        padding-block: var(--space-16);
+        min-height: 50vh;
+    }
+
+    footer {
+        border-top: 1px solid var(--color-border);
+        padding-block-start: var(--space-6);
+        color: var(--color-muted);
+    }
+
+    /* ---- application classes ---- */
+    .brand {
+        font-size: var(--text-2xl);
+        font-weight: 800;
+        text-decoration: none;
+    }
+
+    .brand:hover {
+        text-decoration: none;
+    }
+
+    .lead {
+        font-size: 1.3rem;
+        max-width: 48ch;
+        color: var(--color-muted);
+    }
+
+    .eyebrow {
+        letter-spacing: 0.12em;
+        color: var(--color-accent);
+    }
+
+    .card {
+        margin-block-start: var(--space-12);
+        padding: var(--space-6);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+    }
+
+    /* ---- buttons as <a> elements ---- */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-2);
+        padding: var(--space-2) var(--space-5);
+        border: 1px solid var(--color-accent);
+        border-radius: var(--radius-md);
+        background-color: var(--color-accent);
+        color: var(--color-on-accent);
+        font-weight: var(--font-medium);
+        text-decoration: none;
+        cursor: pointer;
+        transition: background-color var(--duration) var(--ease),
+            border-color var(--duration) var(--ease),
+            color var(--duration) var(--ease);
+    }
+
+    .btn:hover {
+        background-color: var(--color-accent-hover);
+        border-color: var(--color-accent-hover);
+        color: var(--color-on-accent);
+    }
+
+    .btn-outline {
+        background-color: transparent;
+        color: var(--color-accent);
+    }
+
+    .btn-outline:hover {
+        background-color: var(--color-accent);
+        color: var(--color-on-accent);
+    }
+
+    /* ---- accessibility utility ---- */
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+}

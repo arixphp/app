@@ -1,0 +1,29 @@
+Options -Indexes -MultiViews
+DirectoryIndex index.php
+
+<FilesMatch "(^\.|\.(?:md|ini|log|sqlite|db)$)">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Protect private files BEFORE the existing-file bypass.
+    RewriteRule ^(?:app|core|cli|tests|docs)(?:/|$) - [F,L,NC]
+    RewriteRule (^|/)\. - [F,L]
+    RewriteRule ^styles/(?![A-Za-z0-9_/-]+\.css$) - [F,L,NC]
+    RewriteRule ^scripts/(?![A-Za-z0-9_/-]+\.js$) - [F,L,NC]
+    RewriteRule ^assets/(?![A-Za-z0-9_/-]+\.(?:avif|gif|ico|jpe?g|png|webp|mp4|webm|ogv|woff2?|ttf|otf)$) - [F,L,NC]
+    RewriteRule ^assets/fonts/(?![A-Za-z0-9_/-]+\.(?:woff2?|ttf|otf)$) - [F,L,NC]
+
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # PHP owns canonical redirects, language negotiation and page methods.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>

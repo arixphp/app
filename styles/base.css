@@ -1,0 +1,310 @@
+/*
+ * Arix CSS · base (base layer)
+ * Short reset, fluid typography, links, accessibility and forms.
+ * Semantic styles per element: overridden by the utility classes.
+ */
+@layer base {
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    * {
+        margin: 0;
+    }
+
+    html {
+        font-family: var(--font-sans);
+        font-size: 100%;
+        line-height: 1.6;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+        tab-size: 4;
+        background-color: var(--color-bg);
+        color: var(--color-text);
+        text-rendering: optimizeLegibility;
+        overflow-wrap: break-word;
+    }
+
+    body {
+        min-height: 100vh;
+        background-color: var(--color-bg);
+        color: var(--color-text);
+    }
+
+    img, svg, video, canvas {
+        display: block;
+        max-width: 100%;
+    }
+
+    img, video {
+        height: auto;
+    }
+
+    input, button, textarea, select {
+        font: inherit;
+        color: inherit;
+    }
+
+    button {
+        cursor: pointer;
+    }
+
+    ul, ol {
+        padding-inline-start: var(--space-6);
+    }
+
+    table {
+        border-collapse: collapse;
+    }
+
+    hr {
+        border: 0;
+        border-top: 1px solid var(--color-border);
+    }
+
+    [hidden] {
+        display: none !important;
+    }
+
+    /* ---- typography ---- */
+    h1, h2, h3, h4, h5, h6 {
+        font-weight: var(--font-bold);
+        line-height: 1.2;
+        text-wrap: balance;
+    }
+
+    h1 {
+        font-size: clamp(2.4rem, 7vw, 4.8rem);
+        line-height: 1.1;
+        max-width: 15ch;
+        letter-spacing: -0.02em;
+    }
+
+    h2 { font-size: clamp(1.75rem, 4vw, 2.5rem); line-height: 1.15; }
+    h3 { font-size: clamp(1.4rem, 3vw, 1.875rem); line-height: 1.2; }
+    h4 { font-size: clamp(1.2rem, 2.5vw, 1.5rem); line-height: 1.25; }
+    h5 { font-size: var(--text-xl); }
+    h6 { font-size: var(--text-lg); }
+
+    :where(h1, h2, h3, h4, h5, h6) {
+        margin-block-end: var(--space-4);
+    }
+
+    :where(* + h1, * + h2, * + h3, * + h4, * + h5, * + h6) {
+        margin-block-start: var(--space-6);
+    }
+
+    p, ul, ol, dl, blockquote, pre, figure, table {
+        margin-block-end: var(--space-4);
+    }
+
+    p {
+        max-width: 65ch;
+    }
+
+    li + li {
+        margin-block-start: var(--space-1);
+    }
+
+    blockquote {
+        padding-inline-start: var(--space-4);
+        border-inline-start: 3px solid var(--color-border);
+        color: var(--color-muted);
+    }
+
+    small {
+        font-size: var(--text-sm);
+    }
+
+    code, kbd, samp, pre {
+        font-family: var(--font-mono);
+        font-size: var(--text-sm);
+    }
+
+    code, kbd, samp {
+        padding: 0.125em 0.375em;
+        border-radius: var(--radius-sm);
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border);
+    }
+
+    pre {
+        padding: var(--space-4);
+        overflow-x: auto;
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+    }
+
+    pre code {
+        padding: 0;
+        border: 0;
+        background: none;
+    }
+
+    mark {
+        padding: 0.125em 0.25em;
+        background-color: var(--color-selection);
+        color: inherit;
+    }
+
+    /* ---- links ---- */
+    a {
+        color: var(--color-accent);
+        text-underline-offset: 0.25em;
+        transition: color var(--duration) var(--ease);
+    }
+
+    a:hover {
+        color: var(--color-accent-hover);
+    }
+
+    /* ---- focus visible: ring in the accent color ---- */
+    :focus-visible {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 2px;
+    }
+
+    ::selection {
+        background-color: var(--color-selection);
+    }
+
+    /* ---- forms ---- */
+    label {
+        display: block;
+        margin-block-end: var(--space-1);
+        font-weight: var(--font-medium);
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="url"],
+    input[type="search"],
+    input[type="password"],
+    input[type="number"],
+    input[type="tel"],
+    input[type="date"],
+    textarea,
+    select {
+        width: 100%;
+        padding: var(--space-2) var(--space-3);
+        margin-block-end: var(--space-4);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background-color: var(--color-surface);
+        color: var(--color-text);
+        transition: border-color var(--duration) var(--ease),
+            box-shadow var(--duration) var(--ease);
+    }
+
+    textarea {
+        resize: vertical;
+        min-height: 6rem;
+    }
+
+    select {
+        appearance: none;
+        padding-inline-end: var(--space-8);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23788494' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right var(--space-3) center;
+        background-size: 1rem auto;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+        color: var(--color-muted);
+        opacity: 1;
+    }
+
+    input[type="text"]:focus-visible,
+    input[type="email"]:focus-visible,
+    input[type="url"]:focus-visible,
+    input[type="search"]:focus-visible,
+    input[type="password"]:focus-visible,
+    input[type="number"]:focus-visible,
+    input[type="tel"]:focus-visible,
+    input[type="date"]:focus-visible,
+    textarea:focus-visible,
+    select:focus-visible {
+        outline: none;
+        border-color: var(--color-accent);
+        box-shadow: 0 0 0 3px var(--color-selection);
+    }
+
+    input:disabled,
+    textarea:disabled,
+    select:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+
+    input:user-invalid,
+    textarea:user-invalid,
+    select:user-invalid {
+        border-color: var(--color-danger);
+    }
+
+    input[type="checkbox"],
+    input[type="radio"],
+    input[type="range"],
+    progress,
+    meter {
+        accent-color: var(--color-accent);
+    }
+
+    /* ---- buttons ---- */
+    button,
+    [type="button"],
+    [type="submit"],
+    [type="reset"],
+    [role="button"] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-2);
+        padding: var(--space-2) var(--space-5);
+        border: 1px solid var(--color-accent);
+        border-radius: var(--radius-md);
+        background-color: var(--color-accent);
+        color: var(--color-on-accent);
+        font-size: var(--text-base);
+        font-weight: var(--font-medium);
+        line-height: 1.5;
+        text-align: center;
+        text-decoration: none;
+        user-select: none;
+        transition: background-color var(--duration) var(--ease),
+            border-color var(--duration) var(--ease),
+            color var(--duration) var(--ease);
+    }
+
+    button:hover,
+    [type="button"]:hover,
+    [type="submit"]:hover,
+    [type="reset"]:hover,
+    [role="button"]:hover {
+        background-color: var(--color-accent-hover);
+        border-color: var(--color-accent-hover);
+    }
+
+    button:disabled,
+    [type="button"]:disabled,
+    [type="submit"]:disabled,
+    [type="reset"]:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+
+    /* ---- reduced motion ---- */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+        }
+    }
+}
