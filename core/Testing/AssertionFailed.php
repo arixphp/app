@@ -6,6 +6,6 @@ namespace Arix\Testing;
 
 use RuntimeException;
 
-final class AssertionFailed extends RuntimeException
+class AssertionFailed extends RuntimeException
 {
 }

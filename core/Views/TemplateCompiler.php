@@ -6,9 +6,15 @@ namespace Arix\Views;
 
 use RuntimeException;
 
-final class TemplateCompiler
+use function array_slice;
+use function in_array;
+use function is_array;
+use function is_string;
+use function strlen;
+
+class TemplateCompiler
 {
-    public const VERSION = '3';
+    public const string VERSION = '4';
 
     public function compile(string $source): string
     {

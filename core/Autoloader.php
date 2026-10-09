@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Arix;
 
-final class Autoloader
+use function in_array;
+use function strlen;
+
+class Autoloader
 {
     private static array $registered = [];
 

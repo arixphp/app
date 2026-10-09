@@ -7,7 +7,7 @@ namespace Arix\Views;
 use Arix\Routing\RequestContext;
 use RuntimeException;
 
-final class RenderContext
+class RenderContext
 {
     private ?string $layout = null;
     private array $layoutData = [];

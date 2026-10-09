@@ -9,7 +9,7 @@ use Arix\Http\PublicAssets;
 use Arix\Http\Request;
 use InvalidArgumentException;
 
-final class UrlGenerator
+class UrlGenerator
 {
     public function __construct(
         private readonly string $basePath,

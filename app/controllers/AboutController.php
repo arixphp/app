@@ -6,7 +6,7 @@ namespace App\Controllers;
 
 use Arix\Views\Contracts\View;
 
-final class AboutController
+class AboutController
 {
     public function index(): View
     {

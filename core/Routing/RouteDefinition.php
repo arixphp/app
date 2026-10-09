@@ -6,7 +6,7 @@ namespace Arix\Routing;
 
 use InvalidArgumentException;
 
-final class RouteDefinition
+class RouteDefinition
 {
     private CachePolicy $policy;
 

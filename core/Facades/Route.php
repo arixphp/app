@@ -19,7 +19,7 @@ use Arix\Runtime\Facade;
  * @method static RouteDefinition query(string $path, array $handler)
  * @method static RouteDefinition match(array $methods, string $path, array $handler)
  */
-final class Route extends Facade
+class Route extends Facade
 {
     protected static function getKeyName(): string
     {

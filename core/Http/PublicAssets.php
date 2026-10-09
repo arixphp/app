@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Arix\Http;
 
-final class PublicAssets
+use Arix\Support\ForbidInstance;
+
+use function in_array;
+
+class PublicAssets extends ForbidInstance
 {
     public static function allows(string $path): bool
     {

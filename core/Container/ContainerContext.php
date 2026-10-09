@@ -7,7 +7,7 @@ namespace Arix\Container;
 use LogicException;
 
 /** Active scope for the synchronous PHP request lifecycle; not an async runtime. */
-final class ContainerContext
+class ContainerContext
 {
     private static ?Container $current = null;
 

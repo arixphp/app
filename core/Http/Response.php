@@ -6,7 +6,10 @@ namespace Arix\Http;
 
 use Arix\Constants\HttpMethod;
 
-final class Response
+use function in_array;
+use function is_string;
+
+class Response
 {
     public function __construct(
         public readonly string $body = '',

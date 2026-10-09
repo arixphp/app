@@ -7,7 +7,7 @@ namespace Arix\Views;
 use Arix\Views\Contracts\View as ViewContract;
 use InvalidArgumentException;
 
-final class View implements ViewContract
+class View implements ViewContract
 {
     public function __construct(private readonly string $template, private readonly array $properties = [])
     {

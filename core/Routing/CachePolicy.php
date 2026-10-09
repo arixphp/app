@@ -6,7 +6,9 @@ namespace Arix\Routing;
 
 use InvalidArgumentException;
 
-final readonly class CachePolicy
+use function is_string;
+
+readonly class CachePolicy
 {
     /** @param list<string> $query */
     public function __construct(public int $ttl = 0, public array $query = [])

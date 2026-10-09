@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Arix\Localization;
 
+use Arix\Support\Arr;
 use InvalidArgumentException;
 
-final class Translator
+use function in_array;
+use function is_array;
+use function is_string;
+
+class Translator
 {
     private array $catalogues = [];
 
@@ -54,21 +59,47 @@ final class Translator
 
     public function get(string $key, array $replace = []): string
     {
-        $value = $this->catalogue($this->locale)[$key] ?? $this->catalogue($this->defaultLocale)[$key] ?? $key;
+        $value = $this->find($this->locale, $key)
+            ?? ($this->locale === $this->defaultLocale ? null : $this->find($this->defaultLocale, $key))
+            ?? $key;
         foreach ($replace as $name => $replacement) {
             $value = str_replace(':' . $name, (string) $replacement, $value);
         }
 
-        return (string) $value;
+        return $value;
+    }
+
+    private function find(string $locale, string $key): ?string
+    {
+        $value = Arr::get($this->catalogue($locale), $key);
+
+        return is_string($value) && $value !== '' ? $value : null;
     }
 
     private function catalogue(string $locale): array
     {
         if (!isset($this->catalogues[$locale])) {
             $file = $this->directory . '/' . $locale . '.php';
-            $this->catalogues[$locale] = is_file($file) ? require $file : [];
+            $catalogue = is_file($file) ? require $file : [];
+            if (!is_array($catalogue)) {
+                throw new InvalidArgumentException("Translation catalogue for locale '{$locale}' must return an array.");
+            }
+            self::validateKeys($catalogue, $locale);
+            $this->catalogues[$locale] = $catalogue;
         }
 
         return $this->catalogues[$locale];
+    }
+
+    private static function validateKeys(array $values, string $locale): void
+    {
+        foreach ($values as $key => $value) {
+            if (is_string($key) && str_contains($key, '.')) {
+                throw new InvalidArgumentException("Translation catalogue for locale '{$locale}' contains the literal dotted key '{$key}'; use nested arrays.");
+            }
+            if (is_array($value)) {
+                self::validateKeys($value, $locale);
+            }
+        }
     }
 }

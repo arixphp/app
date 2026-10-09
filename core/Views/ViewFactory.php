@@ -6,7 +6,7 @@ namespace Arix\Views;
 
 use Arix\Views\Contracts\View as ViewContract;
 
-final class ViewFactory
+class ViewFactory
 {
     public function make(string $name, array $data = []): ViewContract
     {

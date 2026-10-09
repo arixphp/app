@@ -11,7 +11,7 @@ use RuntimeException;
 use function array_key_exists;
 use function count;
 
-final class Assert
+class Assert
 {
     public static function assertTrue(bool $condition, string $message = 'Failed asserting that the condition is true.'): void
     {

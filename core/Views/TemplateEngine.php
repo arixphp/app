@@ -9,7 +9,11 @@ use Arix\Routing\RequestContext;
 use InvalidArgumentException;
 use RuntimeException;
 
-final class TemplateEngine
+use function count;
+use function in_array;
+use function is_string;
+
+class TemplateEngine
 {
     private array $active = [];
 

@@ -8,7 +8,10 @@ use Closure;
 use InvalidArgumentException;
 use RuntimeException;
 
-final class Container
+use function in_array;
+use function is_object;
+
+class Container
 {
     private array $bindings = [];
     private array $instances = [];

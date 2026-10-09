@@ -8,7 +8,9 @@ use Arix\Constants\HttpMethod;
 use InvalidArgumentException;
 use RuntimeException;
 
-final class Request
+use function strlen;
+
+class Request
 {
     public function __construct(
         public readonly string $method,

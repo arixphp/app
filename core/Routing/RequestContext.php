@@ -7,7 +7,7 @@ namespace Arix\Routing;
 use Arix\Http\Request;
 use Arix\Localization\Translator;
 
-final class RequestContext
+class RequestContext
 {
     private readonly UrlGenerator $urls;
 

@@ -8,7 +8,9 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Throwable;
 
-final class FileCache
+use function strlen;
+
+class FileCache
 {
     private ?string $directory = null;
     private bool $warned = false;

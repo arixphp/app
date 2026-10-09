@@ -6,7 +6,9 @@ namespace Arix\Routing;
 
 use Arix\Http\HttpException;
 
-final class Router
+use function in_array;
+
+class Router
 {
     public function __construct(private readonly RouteCollector $collector)
     {

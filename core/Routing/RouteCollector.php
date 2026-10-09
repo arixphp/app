@@ -7,7 +7,11 @@ namespace Arix\Routing;
 use Arix\Constants\HttpMethod;
 use InvalidArgumentException;
 
-final class RouteCollector
+use function count;
+use function in_array;
+use function is_string;
+
+class RouteCollector
 {
     /** @var list<RouteDefinition> */
     private array $collection = [];
