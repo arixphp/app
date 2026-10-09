@@ -41,4 +41,5 @@ Everything is in `tests/run.php`: `test('name', fn () => ...)` with `check()`, `
 
 - Code comments, messages, names, README and documentation in English. Translation catalogs retain their target languages.
 - `declare(strict_types=1)` in all PHP files (except `.arix.php` templates).
+- Do not declare classes as `final`, including application classes, framework classes, tests, and fixtures.
 - No commands are run during deployment: do not add build steps or mandatory scripts on the hosting server.
