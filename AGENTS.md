@@ -1,43 +1,42 @@
 # AGENTS.md
 
-Proyecto **en desarrollo**: ArixPHP, framework PHP estático sin Composer, Node, build, BD ni sesiones. No hay repo Git (no ejecutes comandos `git` ni asumas historial).
+Project **under development**: ArixPHP, a static PHP framework without Composer, Node, builds, a database, or sessions. **It has its own Git repository** (initial commit, working tree with ongoing edits): do not run `checkout`/`restore`/`stash` or commit unless explicitly instructed, and read files before editing them because they may change during the session. This repository lives in the `arix-universe/` workspace (see `../AGENTS.md` from this repository's root).
 
-Fuentes de verdad: `README.md` (uso) y `docs/IMPLEMENTATION.md` (arquitectura y límites). `PROMPT.md` es un prompt histórico con estructura ya obsoleta (`app/src`, rutas `#[Get('index')]`): no lo sigas. `SECURITY_AUDIT.md` documenta el hallazgo abierto conocido ARIX-SEC-001 (fingerprint por solicitud antes de leer caché): no lo redescubras; léelo antes de tocar la invalidación de caché.
+Sources of truth: `README.md` (usage) and `docs/IMPLEMENTATION.md` (architecture and limitations). `SECURITY_AUDIT.md` documents the known open finding ARIX-SEC-001 (per-request fingerprinting before reading the cache): do not rediscover it; read it before touching cache invalidation.
 
-## Comandos
+## Commands
 
-- Pruebas (única verificación): `php tests/run.php` — 36 pruebas, ≈15 s, código de salida ≠0 si algo falla.
-- No hay selector de prueba única, linter, formatter, typecheck, CI ni `composer.json`/`package.json`. No inventes comandos ni añadas tooling. Para comprobar sintaxis: `php -l <fichero>`.
-- Servidor de desarrollo (desde la raíz): `php -S 127.0.0.1:8080 core/Development/router.php`. Nunca `php -S` sin router: no aplicaría `.htaccess`/`web.config`.
-- CLI autónoma (debe ejecutarse con cwd en la raíz): `php cli/arix make:page Example`, `php cli/arix server [--port=8090]`. `arix update` falla a propósito: no lo "arregles".
-- Debug: solo `APP_DEBUG=true|1` por variable de entorno (`APP_DEBUG=true php tests/run.php`). No hay ficheros `.env`.
-- PHP ≥ 8.3 (el default local es 8.4). Pese a que README dice 8.2+, `core/Version.php` usa constantes de clase tipadas (8.3+): con PHP 8.2 el parseo falla y 9 pruebas rompen.
-- El PHP local imprime un aviso de Xdebug a stderr en cada ejecución: es ruido, no un fallo.
+- Tests (the only verification): `php tests/run.php` — a single suite, ≈1 s, nonzero exit code if anything fails. Test/assertion counts change on every run: do not cite them as a contract.
+- There is no single-test selector, linter, formatter, type checker, CI, or `composer.json`/`package.json`. Do not invent commands or add tooling. To check syntax: `php -l <file>`.
+- Development server (from the root): `php -S 127.0.0.1:8080 core/Development/router.php`. Never use `php -S` without the router: it would not apply `.htaccess`/`web.config`.
+- Debugging: only through the `APP_DEBUG=true|1` environment variable (`APP_DEBUG=true php tests/run.php`). There are no `.env` files.
+- PHP ≥ 8.3 (the local default is 8.4). Although README says 8.2+, `core/Version.php` uses typed class constants (8.3+): parsing fails on PHP 8.2 and 9 tests fail.
+- Local PHP prints an Xdebug warning to stderr on every run: this is noise, not a failure.
 
-## Añadir o cambiar pruebas
+## Adding or Changing Tests
 
-Todo está en `tests/run.php`: `test('nombre', fn () => ...)` con `check()`, `raises()` y `fixture()` (ficheros temporales que se limpian solos). Se ejecuta la suite completa; itera con `grep FAIL` en la salida.
+Everything is in `tests/run.php`: `test('name', fn () => ...)` with `check()`, `raises()`, and `fixture()` (temporary files that clean themselves up). Run the full suite; iterate using `grep FAIL` on the output.
 
-## Arquitectura
+## Architecture
 
-- Frontera de propiedad: `app/` = sitio del usuario (`App\`), `core/` = framework reemplazable (`Arix\`), `styles/ scripts/ assets/` = públicos servidos directamente (sin endpoint PHP de assets). El futuro `arix update` reemplazará solo `core/`; `cli/arix` no carga código del proyecto (lo exigen las pruebas).
-- Entradas: `index.php` → `app/bootstrap.php` → `core/autoload.php`; el dev server entra por `core/Development/router.php` → `index.php`.
-- Rutas: el atributo `#[Get('/ruta')]` define la URL, no el nombre del fichero. El fichero debe coincidir exactamente con la clase, sensible a mayúsculas: `App\Pages\Blog\Article` → `app/pages/Blog/Article.php`.
-- Los ficheros de páginas solo contienen declaraciones: el descubrimiento frío los carga todos, sin salida ni efectos secundarios.
-- Contenedor explícito, sin autowiring: el constructor de una página admite 0 parámetros o un único `PageContext`.
-- `view()` y `trans()` requieren contenedor activo (`ContainerContext::run()`); fuera de scope lanzan `LogicException` (así se escriben las pruebas que los usan).
-- Solo GET/HEAD (405 con `Allow` para el resto). Sin rutas dinámicas en esta versión.
+- Ownership boundary: `app/` = the user's site (`App\`), `core/` = the replaceable framework (`Arix\`), `styles/ scripts/ assets/` = public directories served directly (no PHP asset endpoint).
+- Entry points: `index.php` → `app/bootstrap.php` → `core/autoload.php`; the development server enters through `core/Development/router.php` → `index.php`.
+- Routes: the `#[Get('/route')]` attribute defines the URL, not the filename. The filename must match the class exactly, including case: `App\Pages\Blog\Article` → `app/pages/Blog/Article.php`.
+- Page files contain declarations only: cold discovery loads them all, without output or side effects.
+- Explicit container, no autowiring: a page constructor accepts 0 parameters or a single `PageContext`.
+- `view()` and `trans()` require an active container (`ContainerContext::run()`); outside a scope they throw `LogicException` (write tests that use them accordingly).
+- GET/HEAD only (405 with `Allow` for other methods). No dynamic routes in this version.
 
-## Trampas
+## Pitfalls
 
-- **Versionado de caché (la más fácil de fallar):** las claves de caché incluyen `Version::ID`, `TemplateCompiler::VERSION` y fingerprints de ficheros, pero las pruebas usan siempre un directorio temporal nuevo, así que **nunca detectan** una versión desactualizada. Si cambias lógica de descubrimiento/render en `core/`, sube `core/Version.php` (`ID`); si cambias `core/Views/TemplateCompiler.php`, sube `TemplateCompiler::VERSION`. Sin ese bump, los sitios existentes siguen sirviendo caché obsoleta.
-- **Extensiones de assets duplicadas:** la allowlist vive en `core/Http/PublicAssets.php` (la usan el dev router y las pruebas), en los `.htaccess` (raíz, `styles/`, `scripts/`, `assets/`, `assets/fonts/`) y en `web.config`. Cambiar tipos permitidos = actualizar PHP + Apache + IIS. `styles/` solo `.css`, `scripts/` solo `.js`; SVG está excluido a propósito.
-- Vistas: `view('x')` resuelve `app/views/x.arix.php` **o** `x.php`, no ambos (si hay dos, falla). Las `.arix.php` se compilan a una caché privada escribible; sin escritura fallan con 500 — no actives `allow_eval` para ocultar el problema (apagado por defecto, solo para plantillas de código fiable).
-- La caché HTML (`#[Cache]`, p. ej. en `app/pages/Index.php`) se salta si hay cookies, `Authorization` o parámetros de query desconocidos, y se invalida por fingerprint de `app/`, `styles/`, `scripts/` y `assets/`.
-- Extensiones/archivos sensibles bloqueados en `.htaccess`, `web.config` y `core/Development/router.php`: si tocas rutas o assets, comprueba que las tres capas siguen coincidiendo.
+- **Cache versioning (the easiest to get wrong):** cache keys include `Version::ID`, `TemplateCompiler::VERSION`, and file fingerprints, but tests always use a fresh temporary directory, so they **never detect** an outdated version. If you change discovery/rendering logic in `core/`, bump `core/Version.php` (`ID`); if you change `core/Views/TemplateCompiler.php`, bump `TemplateCompiler::VERSION`. Without that bump, existing sites keep serving stale cached content.
+- **Duplicated asset extensions:** the allowlist lives in `core/Http/PublicAssets.php` (used by the development router and tests), in the `.htaccess` files (root, `styles/`, `scripts/`, `assets/`, `assets/fonts/`), and in `web.config`. Changing allowed types = updating PHP + Apache + IIS. `styles/` allows only `.css`, `scripts/` only `.js`; SVG is intentionally excluded.
+- Views: `view('x')` resolves `app/views/x.arix.php` **or** `x.php`, not both (if both exist, it fails). `.arix.php` views are compiled into a private, writable cache; without write access they fail with 500 — do not enable `allow_eval` to hide the problem (disabled by default, only for trusted-code templates).
+- HTML caching (`#[Cache]`, e.g. in `app/pages/Index.php`) is bypassed when cookies, `Authorization`, or unknown query parameters are present, and invalidated by fingerprints of `app/`, `styles/`, `scripts/`, and `assets/`.
+- Sensitive extensions/files are blocked in `.htaccess`, `web.config`, and `core/Development/router.php`: if you touch routes or assets, verify that all three layers remain aligned.
 
-## Convenciones
+## Conventions
 
-- Comentarios de código, mensajes y nombres en inglés; documentación (`README.md`, `docs/`) en español.
-- `declare(strict_types=1)` en todo PHP (salvo plantillas `.arix.php`).
-- Al desplegar no se ejecutan comandos: no añadas pasos de build ni scripts obligatorios en hosting.
+- Code comments, messages, and names in English; documentation (`README.md`, `docs/`) in Spanish.
+- `declare(strict_types=1)` in all PHP files (except `.arix.php` templates).
+- No commands are run during deployment: do not add build steps or mandatory scripts on the hosting server.
