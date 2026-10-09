@@ -24,6 +24,9 @@ use InvalidArgumentException;
 use Closure;
 use RuntimeException;
 
+use function is_string;
+use function strlen;
+
 final class Application
 {
     private array $config;
@@ -177,81 +180,45 @@ final class Application
 
     private function error(int $status, string $message, array $headers = []): Response
     {
-        $message = htmlspecialchars($message, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        // Keep the fallback independent of application views and public assets.
-        $body = <<<HTML
-            <!doctype html>
-            <html lang="en">
-            <head>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1">
-                <title>{$status} — ArixPHP</title>
-                <style>
-                    :root {
-                        color-scheme: light dark;
-                        --background: #f5f8f9;
-                        --text: #16232b;
-                        --muted: #4c5f6b;
-                        --border: #d2dce2;
-                        --accent: #0a745b;
-                        --selection: #c3e8de;
-                    }
-                    * { box-sizing: border-box; }
-                    body {
-                        margin: 0;
-                        min-height: 100vh;
-                        min-height: 100svh;
-                        display: grid;
-                        align-items: center;
-                        padding: clamp(1.5rem, 6vw, 4rem);
-                        background: var(--background);
-                        color: var(--text);
-                        font-family: system-ui, "Segoe UI", sans-serif;
-                        line-height: 1.6;
-                    }
-                    main { width: 100%; max-width: 48rem; margin-inline: auto; }
-                    h1 {
-                        margin: 0 0 1.5rem;
-                        color: var(--accent);
-                        font-size: clamp(2.4rem, 7vw, 4.8rem);
-                        font-weight: 700;
-                        line-height: 1.1;
-                        letter-spacing: -0.02em;
-                    }
-                    pre {
-                        margin: 0;
-                        padding-top: 1.5rem;
-                        border-top: 1px solid var(--border);
-                        color: var(--muted);
-                        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-                        font-size: 1rem;
-                        white-space: pre-wrap;
-                        overflow-wrap: anywhere;
-                        tab-size: 4;
-                    }
-                    ::selection { background: var(--selection); color: var(--text); }
-                    @media (prefers-color-scheme: dark) {
-                        :root {
-                            --background: #101820;
-                            --text: #eaf2f5;
-                            --muted: #c3d4df;
-                            --border: #38505e;
-                            --accent: #80e8c7;
-                            --selection: #284f46;
-                        }
-                    }
-                </style>
-            </head>
-            <body>
-                <main>
-                    <h1>{$status}</h1>
-                    <pre>{$message}</pre>
-                </main>
-            </body>
-            </html>
-            HTML;
+        $name = $this->config['name'] ?? 'ArixPHP';
+        $body = $this->renderErrorView($status, $message, $name)
+            ?? $this->inlineError($status, $message, $name, $this->config['default_locale'] ?? 'en');
 
         return new Response($body, $status, array_replace(['Content-Type' => 'text/html; charset=UTF-8', 'Cache-Control' => 'no-store', 'X-Content-Type-Options' => 'nosniff'], $headers));
+    }
+
+    private function renderErrorView(int $status, string $message, string $name): ?string
+    {
+        try {
+            $container = ContainerContext::current();
+
+            return $container->get(TemplateEngine::class)->render("errors.{$status}", [
+                'status' => $status,
+                'message' => $message,
+                'name' => $name,
+            ]);
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    private function inlineError(int $status, string $message, string $name, string $locale): string
+    {
+        $message = htmlspecialchars($message, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $name = htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $locale = htmlspecialchars($locale, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $template = @file_get_contents(__DIR__ . '/stubs/error.html');
+
+        if (!is_string($template) || $template === '') {
+            $template = '<!doctype html><html lang="{{locale}}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{{status}} — {{name}}</title></head><body><main><h1>{{status}}</h1><pre>{{message}}</pre></main></body></html>';
+        }
+
+        return strtr($template, [
+            '{{status}}' => (string) $status,
+            '{{message}}' => $message,
+            '{{name}}' => $name,
+            '{{locale}}' => $locale,
+        ]);
     }
 
     private function querySuffix(Request $request): string

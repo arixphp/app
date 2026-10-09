@@ -61,7 +61,11 @@ APP_DEBUG=true php -S 127.0.0.1:8080 core/Development/router.php
 `app/config/app.php` reads the process variable using Environment::boolean().
 Explicit Application overrides take precedence over that configuration
 for testing. The application displays escaped exceptions in debug mode; otherwise,
-it returns a generic error. The bootstrap uses the same environment conversion even
+it returns a generic error. Error responses render the application template
+`app/views/errors/{status}.arix.php` (for example `500.arix.php`) with the
+application name from `config('app.name')`; if that template is missing or
+fails, a standalone inline page independent of views and assets is served.
+The bootstrap uses the same environment conversion even
 if autoloading fails; it returns plain text, preserves HEAD behavior, and does not cache errors.
 Neither HTTP headers nor parameters can enable debugging. Errors are always
 recorded in the PHP log.
