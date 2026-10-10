@@ -62,6 +62,7 @@ class Translator
         $value = $this->find($this->locale, $key)
             ?? ($this->locale === $this->defaultLocale ? null : $this->find($this->defaultLocale, $key))
             ?? $key;
+
         foreach ($replace as $name => $replacement) {
             $value = str_replace(':' . $name, (string) $replacement, $value);
         }

@@ -14,7 +14,6 @@ use RecursiveIteratorIterator;
 use RuntimeException;
 
 use function in_array;
-use function is_resource;
 
 abstract class TestCase
 {
@@ -154,57 +153,6 @@ abstract class TestCase
     protected function query(Application $application, string $path, array $query = [], string $body = '', array $headers = []): TestResponse
     {
         return $this->call($application, 'QUERY', $path, $query, $body, $headers);
-    }
-
-    protected function serveFixture(string $directory, callable $callback): void
-    {
-        $socket = stream_socket_server('tcp://127.0.0.1:0', $code, $message);
-
-
-        Assert::assertTrue(is_resource($socket), (string) $message);
-
-        $address = (string) stream_socket_get_name($socket, false);
-
-        fclose($socket);
-
-        $process = proc_open(
-            [PHP_BINARY, '-S', $address, '-t', $directory, $this->projectRoot() . '/core/Development/router.php'],
-            [
-                0 => ['pipe', 'r'],
-                1 => ['file', $this->temporary . DIRECTORY_SEPARATOR . 'server.log', 'a'],
-                2 => ['file', $this->temporary . DIRECTORY_SEPARATOR . 'server.log', 'a']
-            ],
-            $pipes,
-            $this->projectRoot(),
-        );
-
-        Assert::assertTrue(is_resource($process), 'Development server did not start.');
-
-        fclose($pipes[0]);
-
-        try {
-            $ready = false;
-            for ($attempt = 0; $attempt < 100; $attempt++) {
-                $connection = @stream_socket_client("tcp://{$address}", $code, $message, 0.05);
-
-                if (is_resource($connection)) {
-                    fclose($connection);
-
-                    $ready = true;
-
-                    break;
-                }
-
-                usleep(20000);
-            }
-
-            Assert::assertTrue($ready, 'Development server did not start.');
-
-            $callback("http://{$address}");
-        } finally {
-            proc_terminate($process);
-            proc_close($process);
-        }
     }
 
     /** @param class-string $expected */

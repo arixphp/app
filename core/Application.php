@@ -17,6 +17,7 @@ use Arix\Routing\RequestContext;
 use Arix\Routing\RouteCollector;
 use Arix\Routing\Router;
 use Arix\Routing\UrlGenerator;
+use Arix\Support\Path;
 use Arix\Views\TemplateEngine;
 use Arix\Views\ViewFactory;
 use Throwable;
@@ -24,10 +25,13 @@ use InvalidArgumentException;
 use Closure;
 use RuntimeException;
 
+use function in_array;
+use function is_array;
+use function is_int;
 use function is_string;
 use function strlen;
 
-final class Application
+class Application
 {
     private array $config;
     private array $cacheConfig;
@@ -35,13 +39,23 @@ final class Application
 
     public function __construct(private readonly string $root, array $overrides = [], array $cacheOverrides = [])
     {
-        $this->config = array_replace(require $root . '/app/config/app.php', $overrides);
+        $configPath = Path::join($root, 'app', 'config', 'app.php');
+        $this->config = array_replace(require $configPath, $overrides);
+
+        Repository::validate($this->config, $configPath);
+
         $limit = $this->config['max_body_bytes'] ?? 1048576;
+
         if (!is_int($limit) || $limit < 1 || $limit === PHP_INT_MAX) {
             throw new InvalidArgumentException('max_body_bytes must be a positive bounded integer.');
         }
+
         $this->config['max_body_bytes'] = $limit;
-        $this->cacheConfig = array_replace(require $root . '/app/config/cache.php', $cacheOverrides);
+        $cacheConfigPath = Path::join($root, 'app', 'config', 'cache.php');
+        $this->cacheConfig = array_replace(require $cacheConfigPath, $cacheOverrides);
+
+        Repository::validate($this->cacheConfig, $cacheConfigPath);
+
         $this->cache = new FileCache($root, $this->cacheConfig);
     }
 

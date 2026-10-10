@@ -2,6 +2,17 @@
 
 declare(strict_types=1);
 
+if (PHP_SAPI === 'cli') {
+    fwrite(STDERR, "ArixPHP does not render pages from the PHP command line. Run 'php tests/run.php' for tests.\n");
+    exit(1);
+}
+
+if (PHP_SAPI === 'cli-server') {
+    http_response_code(503);
+
+    return;
+}
+
 $debug = match (strtolower(trim((string) getenv('APP_DEBUG')))) {
     'true', '1' => true,
     default => false,

@@ -1,0 +1,51 @@
+{
+	frankenphp {
+		php_ini display_errors Off
+		php_ini log_errors On
+		php_ini post_max_size 1M
+		php_ini upload_max_filesize 1M
+	}
+}
+
+{$SERVER_NAME:http://127.0.0.1:8080} {
+	root * .
+	encode zstd br gzip
+
+	header {
+		?X-Content-Type-Options nosniff
+	}
+
+	request_body {
+		max_size 1048576
+	}
+
+	route {
+		# Deny private directories and hidden path segments before handling files.
+		@private path_regexp private `(?i)(?:^/(?:app|core|cli|tests|docs)(?:/|$)|(?:^|/)\.)`
+		respond @private 403
+
+		# assets/fonts is more restrictive than the rest of assets/.
+		@fonts path_regexp fonts `^/assets/fonts/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:woff2?|ttf|otf)$`
+		file_server @fonts
+		@font_directory path /assets/fonts /assets/fonts/*
+		respond @font_directory 403
+
+		# These are the only files served directly by Caddy.
+		@public_files path_regexp public_files `^/(?:styles/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:css)|scripts/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:js)|assets/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:avif|gif|ico|jpe?g|png|webp|mp4|webm|ogv|woff2?|ttf|otf))$`
+		file_server @public_files
+
+		# Invalid or missing files below public asset directories do not reach PHP.
+		@public_directories path /styles /styles/* /scripts /scripts/* /assets /assets/*
+		respond @public_directories 403
+
+		@robots {
+			path /robots.txt
+			file
+		}
+		file_server @robots
+
+		# ArixPHP is a front-controller application; never execute another PHP file.
+		rewrite * /index.php
+		php
+	}
+}
