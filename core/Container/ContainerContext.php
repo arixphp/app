@@ -6,10 +6,9 @@ namespace Arix\Container;
 
 use LogicException;
 
-/** Active scope for the synchronous PHP request lifecycle; not an async runtime. */
 class ContainerContext
 {
-    private static ?Container $current = null;
+    private static Container|null $current = null;
 
     public static function current(): Container
     {
@@ -20,6 +19,7 @@ class ContainerContext
     {
         $previous = self::$current;
         self::$current = $container;
+
         try {
             return $callback();
         } finally {
