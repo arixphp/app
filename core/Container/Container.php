@@ -4,10 +4,6 @@ declare(strict_types=1);
 
 namespace Arix\Container;
 
-use Arix\Exceptions\CircularServiceException;
-use Arix\Exceptions\ContainerRuntimeException;
-use Arix\Exceptions\InvalidServiceException;
-use Arix\Exceptions\UnknownServiceException;
 use Closure;
 use InvalidArgumentException;
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Arix\Exceptions;
+namespace Arix\Container;
 
 use RuntimeException;
 
