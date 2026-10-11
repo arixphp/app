@@ -17,6 +17,7 @@ use Arix\Routing\RequestContext;
 use Arix\Routing\RouteCollector;
 use Arix\Routing\Router;
 use Arix\Routing\UrlGenerator;
+use Arix\Support\ApplicationPaths;
 use Arix\Support\Path;
 use Arix\Views\TemplateEngine;
 use Arix\Views\ViewFactory;
@@ -36,11 +37,21 @@ class Application
     private array $config;
     private array $cacheConfig;
     private FileCache $cache;
+    private readonly ApplicationPaths $paths;
 
-    public function __construct(private readonly string $root, array $overrides = [], array $cacheOverrides = [])
-    {
+    public function __construct(
+        private readonly string $root,
+        array $overrides = [],
+        array $cacheOverrides = []
+    ) {
+        $this->paths = new ApplicationPaths($root);
+        $configurationContainer = new Container();
+        $configurationContainer->instance(ApplicationPaths::class, $this->paths);
         $configPath = Path::join($root, 'app', 'config', 'app.php');
-        $this->config = array_replace(require $configPath, $overrides);
+        $this->config = array_replace(ContainerContext::run(
+            $configurationContainer,
+            static fn (): array => require $configPath,
+        ), $overrides);
 
         Repository::validate($this->config, $configPath);
 
@@ -52,7 +63,10 @@ class Application
 
         $this->config['max_body_bytes'] = $limit;
         $cacheConfigPath = Path::join($root, 'app', 'config', 'cache.php');
-        $this->cacheConfig = array_replace(require $cacheConfigPath, $cacheOverrides);
+        $this->cacheConfig = array_replace(ContainerContext::run(
+            $configurationContainer,
+            static fn (): array => require $cacheConfigPath,
+        ), $cacheOverrides);
 
         Repository::validate($this->cacheConfig, $cacheConfigPath);
 
@@ -74,6 +88,7 @@ class Application
     private function createContainer(Request $request): Container
     {
         $container = new Container();
+        $container->instance(ApplicationPaths::class, $this->paths);
         $container->instance(Repository::class, $this->configuration($this->config['default_locale']));
         $container->instance(Request::class, $request);
         $container->instance(FileCache::class, $this->cache);

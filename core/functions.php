@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+if (!function_exists('base_path')) {
+    function base_path(string $path = ''): string
+    {
+        return Arix\Container\ContainerContext::current()->get(Arix\Support\ApplicationPaths::class)->base($path);
+    }
+}
+
 if (!function_exists('view')) {
     function view(string $name, array $data = []): Arix\Views\Contracts\View
     {

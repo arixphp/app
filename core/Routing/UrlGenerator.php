@@ -38,7 +38,7 @@ class UrlGenerator
         return rtrim($this->basePath, '/') . '/' . $suffix;
     }
 
-    public function current_path(): string
+    public function currentPath(): string
     {
         // RequestContext paths are decoded; return a reusable URL path.
         return implode('/', array_map('rawurlencode', explode('/', $this->currentPath)));
@@ -46,7 +46,7 @@ class UrlGenerator
 
     public function current(): string
     {
-        return $this->to($this->current_path());
+        return $this->to($this->currentPath());
     }
 
     public function asset(string $path): string

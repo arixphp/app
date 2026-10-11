@@ -16,6 +16,7 @@ readonly class CachePolicy
         if ($ttl < 0 || !array_is_list($query)) {
             throw new InvalidArgumentException('Invalid cache policy.');
         }
+
         foreach ($query as $key) {
             if (!is_string($key) || !preg_match('/^[A-Za-z_][A-Za-z0-9_-]*$/D', $key)) {
                 throw new InvalidArgumentException('Invalid cache query key.');

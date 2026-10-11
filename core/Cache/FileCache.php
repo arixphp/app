@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Arix\Cache;
 
+use Arix\Support\Path;
+use Arix\Support\ApplicationPaths;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Throwable;
@@ -12,16 +14,30 @@ use function strlen;
 
 class FileCache
 {
-    private ?string $directory = null;
+    // Null represents disabled or unavailable persistent storage.
+    private string|null $directory = null;
+
     private bool $warned = false;
 
     public function __construct(string $root, array $config)
     {
-        if (!($config['enabled'] ?? true)) {
+        $cacheIsEnabled = $config['enabled'] ?? true;
+
+        if (! $cacheIsEnabled) {
             return;
         }
-        $base = $config['path'] ?? sys_get_temp_dir();
+
+        $base = array_key_exists('path', $config)
+            ? ($config['path'] ?? sys_get_temp_dir())
+            : (new ApplicationPaths($root))->base(Path::join('storage', 'cache'));
+
+        if (!is_string($base) || trim($base) === '') {
+            $this->warn();
+            return;
+        }
+
         $directory = rtrim($base, '/\\') . '/arix-' . substr(hash('sha256', $root), 0, 24);
+
         try {
             if ((!is_dir($directory) && !@mkdir($directory, 0700, true)) || is_link($directory) || !is_writable($directory)) {
                 $this->warn();
@@ -43,18 +59,19 @@ class FileCache
         }
     }
 
-    public function read(string $key): ?string
+    public function read(string $key): string|null
     {
         if ($this->directory === null) {
             return null;
         }
+
         $path = $this->path($key);
         $content = is_file($path) && !is_link($path) ? @file_get_contents($path) : false;
 
         return $content === false ? null : $content;
     }
 
-    public function write(string $key, string $content): ?string
+    public function write(string $key, string $content): string|null
     {
         if ($this->directory === null) {
             return null;
@@ -83,7 +100,7 @@ class FileCache
         }
     }
 
-    public function existingPath(string $key): ?string
+    public function existingPath(string $key): string|null
     {
         return $this->directory !== null && is_file($this->path($key)) && !is_link($this->path($key)) ? $this->path($key) : null;
     }
@@ -125,13 +142,14 @@ class FileCache
 
     private function path(string $key): string
     {
-        return $this->directory . '/' . hash('sha256', $key) . '.php';
+        return Path::join($this->directory, hash('sha256', $key) . '.php');
     }
 
     private function warn(): void
     {
         if (!$this->warned) {
             error_log('Arix: cache unavailable; rendering without persistent cache.');
+
             $this->warned = true;
         }
     }

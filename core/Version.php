@@ -6,5 +6,5 @@ namespace Arix;
 
 class Version
 {
-    public const string ID = '0.6.0';
+    public const string ID = '0.6.1';
 }

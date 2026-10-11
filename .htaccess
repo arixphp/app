@@ -13,7 +13,7 @@ DirectoryIndex index.php
     RewriteEngine On
 
     # Protect private files BEFORE the existing-file bypass.
-    RewriteRule ^(?:app|core|cli|tests|docs)(?:/|$) - [F,L,NC]
+    RewriteRule ^(?:app|core|cli|tests|docs|storage)(?:/|$) - [F,L,NC]
     RewriteRule (^|/)\. - [F,L]
     RewriteRule ^styles/(?![A-Za-z0-9_/-]+\.css$) - [F,L,NC]
     RewriteRule ^scripts/(?![A-Za-z0-9_/-]+\.js$) - [F,L,NC]

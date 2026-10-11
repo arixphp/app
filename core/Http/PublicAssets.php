@@ -15,7 +15,9 @@ class PublicAssets extends ForbidInstance
         if (!preg_match('~^(styles|scripts|assets)/([A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.([A-Za-z0-9]+)$~D', $path, $match)) {
             return false;
         }
+
         $extension = strtolower($match[3]);
+
         $fonts = ['woff', 'woff2', 'ttf', 'otf'];
         $allowed = match ($match[1]) {
             'styles' => ['css'],
