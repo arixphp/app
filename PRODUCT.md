@@ -27,8 +27,8 @@ and Inertia's separation, but does not implement their compilers or an SPA proto
 ## Operating Context
 
 - Local development with PHP and direct editing of pages, views, and assets.
-- Development server: `php -S 127.0.0.1:8080 core/Development/router.php`,
-  from the project root; never start PHP without that router.
+- Development server: `SERVER_NAME=http://127.0.0.1:8181 ./frankenphp run --config Caddyfile --adapter caddyfile`,
+  from the project root; never serve the project with bare `php-server` or `php -S`.
 - Deployment by uploading files to traditional PHP hosting, with rules
   equivalent to those provided for Apache or IIS.
 - `app/`, `styles/`, `scripts/`, and `assets/` belong to the user; `core/` defines
