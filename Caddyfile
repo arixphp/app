@@ -1,13 +1,15 @@
 {
 	frankenphp {
-		php_ini display_errors Off
-		php_ini log_errors On
-		php_ini post_max_size 1M
-		php_ini upload_max_filesize 1M
+		php_ini {
+			display_errors Off
+			log_errors On
+			post_max_size 1M
+			upload_max_filesize 1M
+		}
 	}
 }
 
-{$SERVER_NAME:http://127.0.0.1:8080} {
+{$SERVER_NAME:http://127.0.0.1:8181} {
 	root * .
 	encode zstd br gzip
 
@@ -21,7 +23,7 @@
 
 	route {
 		# Deny private directories and hidden path segments before handling files.
-		@private path_regexp private `(?i)(?:^/(?:app|core|cli|tests|docs)(?:/|$)|(?:^|/)\.)`
+		@private path_regexp private `(?i)(?:^/(?:app|core|cli|tests|docs|storage)(?:/|$)|(?:^|/)\.)`
 		respond @private 403
 
 		# assets/fonts is more restrictive than the rest of assets/.
