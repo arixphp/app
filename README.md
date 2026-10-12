@@ -27,7 +27,7 @@ app/
     lang/                 Translations
     controllers/          App\Controllers\ classes
     routes.php            Explicit Route declarations
-    services.php          Explicit service and controller factories
+    services.php          Optional service and controller factories
     views/                Page views, layouts, partials, and components
 core/                     Replaceable framework, Arix\ namespace
     autoload.php          Framework autoloading and helpers
@@ -121,7 +121,7 @@ The facade resolves `RouteCollector` from the active container, following the
 Phenix pattern. Registering routes does not instantiate controllers. Each request
 loads `app/routes.php` again; there is no persistent route cache or compilation.
 
-`app/services.php` returns an explicit registration closure:
+`app/services.php` is optional. When present it returns an explicit registration closure:
 
 ```php
 use App\Controllers\WelcomeController;
@@ -131,6 +131,11 @@ return static function (Container $container): void {
     $container->bind(WelcomeController::class, static fn (): WelcomeController => new WelcomeController());
 };
 ```
+
+Controllers without required constructor parameters resolve from their
+routes alone; an explicit binding always wins, and is required when the
+constructor takes dependencies. A missing file is skipped; a present file
+must return the closure.
 
 Only the selected controller is resolved; there is no autowiring or mandatory base
 class. Factories can resolve dependencies with `$container->get()`.

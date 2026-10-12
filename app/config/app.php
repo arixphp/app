@@ -3,7 +3,10 @@
 declare(strict_types=1);
 
 return [
-    'debug' => env('APP_DEBUG', false),
+    'debug' => match (strtolower(trim((string) env('APP_DEBUG', '')))) {
+        'true', '1' => true,
+        default => false,
+    },
     'base_path' => '',
     'locales' => ['es', 'en'],
     'default_locale' => 'en',

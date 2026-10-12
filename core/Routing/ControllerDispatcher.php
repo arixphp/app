@@ -74,7 +74,9 @@ class ControllerDispatcher
             }
         }
 
-        $controller = $container->get($route->controller);
+        $controller = $container->has($route->controller)
+            ? $container->get($route->controller)
+            : $this->defaultController($route->controller);
 
         if (! $controller instanceof $route->controller) {
             throw new RuntimeException('Controller binding returned an incompatible instance.');
@@ -97,6 +99,29 @@ class ControllerDispatcher
         }
 
         return new Response($engine->render($result->name(), $result->data()), 200, ['Content-Type' => 'text/html; charset=UTF-8']);
+    }
+
+    private function defaultController(string $controller): object
+    {
+        $reflection = new ReflectionClass($controller);
+        $constructor = $reflection->getConstructor();
+
+        if ($constructor === null) {
+
+            return $reflection->newInstance();
+        }
+
+        if (! $constructor->isPublic()) {
+            throw new RuntimeException("Controller {$controller} cannot be constructed; register an explicit binding.");
+        }
+
+        foreach ($constructor->getParameters() as $parameter) {
+            if (! $parameter->isOptional()) {
+                throw new RuntimeException("Controller {$controller} has required constructor parameters; register an explicit binding.");
+            }
+        }
+
+        return $reflection->newInstance();
     }
 
     private function controllerFile(string $class): string

@@ -35,6 +35,11 @@ class Container
         $this->instances[$id] = $instance;
     }
 
+    public function has(string $id): bool
+    {
+        return isset($this->instances[$id]) || isset($this->bindings[$id]);
+    }
+
     public function get(string $id): object
     {
         if (isset($this->instances[$id])) {
