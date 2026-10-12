@@ -23,7 +23,10 @@ DirectoryIndex index.php
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
+    # Only explicit public files may bypass the front controller.
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^(?:index\.php|robots\.txt|favicon\.ico|styles/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:css)|scripts/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:js)|assets/(?!(?i:fonts)/)(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:avif|gif|ico|jpe?g|png|webp|mp4|webm|ogv|woff2?|ttf|otf)|assets/fonts/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:woff2?|ttf|otf))$ - [L]
+
     # PHP owns canonical redirects, language negotiation and page methods.
-    RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
