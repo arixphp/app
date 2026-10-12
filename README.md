@@ -376,9 +376,9 @@ To install under `/site`, set `base_path` to that value. Examples:
 ```php
 url('/about');                    // /site/about
 url('/');                        // /site/
-url()->current_path();           // /about (on the about page)
+url()->currentPath();           // /about (on the about page)
 url()->current();                // /site/about, without a query string
-url(url()->current_path());       // /site/about
+url(url()->currentPath());       // /site/about
 asset('styles/app.css');          // /site/styles/app.css
 asset('scripts/app.js');          // /site/scripts/app.js
 asset('assets/images/logo.webp'); // /site/assets/images/logo.webp
@@ -387,7 +387,7 @@ asset('assets/fonts/site.woff2');  // /site/assets/fonts/site.woff2
 
 `url()` returns UrlGenerator without arguments and generates an internal URL with
 a path. It takes no language argument and adds no language prefixes.
-`current_path()` excludes base_path and query and encodes reusable segments without
+`currentPath()` excludes base_path and query and encodes reusable segments without
 double encoding. The generator retains protocol, traversal, and separator checks.
 `RequestContext::urls()` exposes the container's instance; the context's `url()`
 and `asset()` delegate to it.
