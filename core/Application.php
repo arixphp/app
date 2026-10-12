@@ -110,10 +110,17 @@ class Application
             'lang' => $this->languageDirectory,
         ]);
 
+        if (is_link($this->routesFile)) {
+            throw new RuntimeException("Application routes are linked: {$this->routesFile}");
+        }
+
+        if (! is_file($this->routesFile) || ! is_readable($this->routesFile)) {
+            throw new RuntimeException("Application routes are missing: {$this->routesFile}");
+        }
+
         require $this->routesFile;
     }
 
-    /** @return Closure */
     private static function servicesClosure(string $file): Closure
     {
         if (is_link($file)) {
