@@ -4,59 +4,71 @@ declare(strict_types=1);
 
 namespace Arix\Routing;
 
+use Arix\Constants\HttpMethod;
+use Arix\Constants\HttpStatusCode;
 use Arix\Http\HttpException;
+use Arix\FastRoute\Dispatcher;
 
 use function in_array;
 
 class Router
 {
-    public function __construct(private readonly RouteCollector $collector)
-    {
-    }
+    public function __construct(private readonly RouteRegistry $registry) {}
 
-    public function resolve(string $method, string $path): RouteDefinition
+    public function resolve(string $method, string $path): RouteMatch
     {
-        $get = null;
-        foreach ($this->collector->routes() as $route) {
-            if ($route->path !== $path) {
-                continue;
-            }
-            if (in_array($method, $route->methods, true)) {
-                return $route;
-            }
-            if (in_array('GET', $route->methods, true)) {
-                $get = $route;
-            }
+        $dispatcher = $this->registry->dispatcher();
+        $result = $dispatcher->dispatch($method, $path);
+
+        if ($result[0] === Dispatcher::FOUND) {
+            return new RouteMatch($result[1], $result[2], []);
         }
-        if ($method === 'HEAD' && $get !== null) {
-            return $get;
-        }
+
         $allowed = $this->allowedMethods($path);
+
         if ($allowed === []) {
-            throw new HttpException(404, 'Route not found.');
+            throw new HttpException(HttpStatusCode::NOT_FOUND, 'Route not found.');
         }
 
-        throw new HttpException(405, 'Method not allowed.', ['Allow' => implode(', ', $allowed)]);
+        if ($method === HttpMethod::OPTIONS->value) {
+            return new RouteMatch(null, [], $allowed);
+        }
+
+        throw new HttpException(HttpStatusCode::METHOD_NOT_ALLOWED, 'Method not allowed.', ['Allow' => implode(', ', $allowed)]);
     }
 
-    /** @return list<string> */
-    public function allowedMethods(string $path): array
+    private function allowedMethods(string $path): array
     {
         $methods = [];
-        foreach ($this->collector->routes() as $route) {
-            if ($route->path === $path) {
-                $methods = [...$methods, ...$route->methods];
+        $dispatcher = $this->registry->dispatcher();
+
+        foreach ($this->registry->methods() as $method) {
+            if ($dispatcher->dispatch($method, $path)[0] === Dispatcher::FOUND) {
+                $methods[] = $method;
             }
         }
+
         if ($methods === []) {
             return [];
         }
-        if (in_array('GET', $methods, true)) {
-            $methods[] = 'HEAD';
+
+        if (in_array(HttpMethod::GET->value, $methods, true)) {
+            $methods[] = HttpMethod::HEAD->value;
         }
-        $methods[] = 'OPTIONS';
+
+        $methods[] = HttpMethod::OPTIONS->value;
         $methods = array_values(array_unique($methods));
-        $order = array_flip(['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'QUERY']);
+        $order = array_flip([
+            HttpMethod::GET->value,
+            HttpMethod::HEAD->value,
+            HttpMethod::POST->value,
+            HttpMethod::PUT->value,
+            HttpMethod::PATCH->value,
+            HttpMethod::DELETE->value,
+            HttpMethod::OPTIONS->value,
+            HttpMethod::QUERY->value,
+        ]);
+
         usort($methods, static fn (string $a, string $b): int => (($order[$a] ?? 99) <=> ($order[$b] ?? 99)) ?: strcmp($a, $b));
 
         return $methods;

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Arix\Support;
 
-use function is_array;
 use function array_key_exists;
+use function is_array;
 
 class Arr extends ForbidInstance
 {
@@ -14,7 +14,7 @@ class Arr extends ForbidInstance
         $value = $array;
 
         foreach (explode('.', $key) as $segment) {
-            if (!is_array($value) || !array_key_exists($segment, $value)) {
+            if (! is_array($value) || ! array_key_exists($segment, $value)) {
                 return $default;
             }
 
@@ -29,7 +29,7 @@ class Arr extends ForbidInstance
         $value = $array;
 
         foreach (explode('.', $key) as $segment) {
-            if (!is_array($value) || !array_key_exists($segment, $value)) {
+            if (! is_array($value) || ! array_key_exists($segment, $value)) {
                 return false;
             }
 
@@ -46,7 +46,7 @@ class Arr extends ForbidInstance
         $target = &$array;
 
         foreach ($segments as $segment) {
-            if (!isset($target[$segment]) || !is_array($target[$segment])) {
+            if (! isset($target[$segment]) || ! is_array($target[$segment])) {
                 $target[$segment] = [];
             }
 
@@ -65,7 +65,7 @@ class Arr extends ForbidInstance
         $target = &$array;
 
         foreach ($segments as $segment) {
-            if (!isset($target[$segment]) || !is_array($target[$segment])) {
+            if (! isset($target[$segment]) || ! is_array($target[$segment])) {
                 return;
             }
 
@@ -123,7 +123,7 @@ class Arr extends ForbidInstance
         return $result;
     }
 
-    public static function pluck(array $array, string $value, ?string $key = null): array
+    public static function pluck(array $array, string $value, null|string $key = null): array
     {
         $results = [];
 
@@ -142,7 +142,7 @@ class Arr extends ForbidInstance
         return $results;
     }
 
-    public static function first(array $array, ?callable $callback = null, mixed $default = null): mixed
+    public static function first(array $array, null|callable $callback = null, mixed $default = null): mixed
     {
         if ($callback === null) {
             return $array === [] ? $default : reset($array);
@@ -157,7 +157,7 @@ class Arr extends ForbidInstance
         return $default;
     }
 
-    public static function last(array $array, ?callable $callback = null, mixed $default = null): mixed
+    public static function last(array $array, null|callable $callback = null, mixed $default = null): mixed
     {
         if ($callback === null) {
             return $array === [] ? $default : end($array);

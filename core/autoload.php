@@ -2,40 +2,31 @@
 
 declare(strict_types=1);
 
-// Project-specific PSR-4 mapping, following the PHP-FIG closure example.
-// Keep configuration local: requiring this file must not overwrite caller variables.
-(static function (): void {
-    $prefix = 'Arix\\';
-    $prefixLength = strlen($prefix);
-    $baseDirectory = realpath(__DIR__);
+if (PHP_VERSION_ID < 80401) {
+    throw new RuntimeException('Arix core requires PHP >= 8.4.1.');
+}
 
-    if ($baseDirectory === false) {
+if (! extension_loaded('mbstring')) {
+    throw new RuntimeException('Arix core requires ext-mbstring.');
+}
+
+spl_autoload_register(static function (string $class): void {
+    if (! str_starts_with($class, 'Arix\\')) {
         return;
     }
 
-    $baseDirectory .= DIRECTORY_SEPARATOR;
+    $relative = substr($class, 5);
 
-    spl_autoload_register(static function (string $class) use ($prefix, $prefixLength, $baseDirectory): void {
-        if (!str_starts_with($class, $prefix)) {
-            return;
-        }
+    if (! preg_match('/^[A-Za-z_][A-Za-z0-9_]*(?:\\\\[A-Za-z_][A-Za-z0-9_]*)*$/D', $relative)) {
+        return;
+    }
 
-        $relativeClass = substr($class, $prefixLength);
+    $file = __DIR__.'/'.str_replace('\\', '/', $relative).'.php';
 
-        if (!preg_match('/^[A-Za-z_\x80-\xff][A-Za-z0-9_\x80-\xff]*(?:\\\\[A-Za-z_\x80-\xff][A-Za-z0-9_\x80-\xff]*)*$/D', $relativeClass)) {
-            return;
-        }
-
-
-        $candidate = $baseDirectory . str_replace('\\', DIRECTORY_SEPARATOR, $relativeClass) . '.php';
-        $file = @realpath($candidate);
-
-        if ($file === false || !str_starts_with($file, $baseDirectory) || !@is_file($file) || !@is_readable($file)) {
-            return;
-        }
-
+    if (is_file($file)) {
         require_once $file;
-    });
-})();
+    }
+});
 
-require_once __DIR__ . '/functions.php';
+require_once __DIR__.'/functions.php';
+require_once __DIR__.DIRECTORY_SEPARATOR.'FastRoute'.DIRECTORY_SEPARATOR.'functions.php';

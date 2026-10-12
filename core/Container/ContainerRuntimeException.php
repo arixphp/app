@@ -6,7 +6,4 @@ namespace Arix\Container;
 
 use RuntimeException;
 
-class ContainerRuntimeException extends RuntimeException
-{
-    //
-}
+class ContainerRuntimeException extends RuntimeException {}

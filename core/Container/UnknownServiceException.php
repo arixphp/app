@@ -6,7 +6,4 @@ namespace Arix\Container;
 
 use RuntimeException;
 
-class UnknownServiceException extends RuntimeException
-{
-    //
-}
+class UnknownServiceException extends RuntimeException {}

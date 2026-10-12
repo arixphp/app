@@ -40,25 +40,19 @@ class Container
         if (isset($this->instances[$id])) {
             return $this->instances[$id];
         }
-
-        if (!isset($this->bindings[$id])) {
-            throw new UnknownServiceException('Service is not registered: ' . $id);
+        if (! isset($this->bindings[$id])) {
+            throw new UnknownServiceException("Service is not registered: {$id}");
         }
-
         if (in_array($id, $this->resolving, true)) {
-            throw new CircularServiceException('Circular dependency: ' . implode(' -> ', [...$this->resolving, $id]));
+            throw new CircularServiceException('Circular dependency: '.implode(' -> ', [...$this->resolving, $id]));
         }
-
         $this->resolving[] = $id;
-
         try {
             $binding = $this->bindings[$id];
             $instance = ($binding['factory'])($this);
-
-            if (!is_object($instance)) {
+            if (! is_object($instance)) {
                 throw new InvalidServiceException("Service factories must return objects: {$id}");
             }
-
             if ($binding['shared']) {
                 $this->instances[$id] = $instance;
             }
@@ -81,7 +75,6 @@ class Container
         if ($id === '') {
             throw new InvalidArgumentException('Service identifiers cannot be empty.');
         }
-
         if (in_array($id, $this->resolving, true)) {
             throw new ContainerRuntimeException("Cannot replace a service while resolving it: {$id}");
         }

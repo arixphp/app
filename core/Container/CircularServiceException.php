@@ -6,7 +6,4 @@ namespace Arix\Container;
 
 use RuntimeException;
 
-class CircularServiceException extends RuntimeException
-{
-    //
-}
+class CircularServiceException extends RuntimeException {}

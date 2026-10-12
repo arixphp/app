@@ -13,8 +13,9 @@ abstract class Facade
     public static function __callStatic(string $method, array $arguments): mixed
     {
         $service = ContainerContext::current()->get(static::getKeyName());
-        if (!method_exists($service, $method) || !is_callable([$service, $method])) {
-            throw new BadMethodCallException($service::class . ' does not have public method ' . $method);
+
+        if (! method_exists($service, $method) || ! is_callable([$service, $method])) {
+            throw new BadMethodCallException($service::class.' does not have public method '.$method);
         }
 
         return $service->{$method}(...$arguments);

@@ -6,7 +6,4 @@ namespace Arix\Container;
 
 use RuntimeException;
 
-class InvalidServiceException extends RuntimeException
-{
-    //
-}
+class InvalidServiceException extends RuntimeException {}

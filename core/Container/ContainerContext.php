@@ -8,11 +8,11 @@ use LogicException;
 
 class ContainerContext
 {
-    private static Container|null $current = null;
+    private static null|Container $current = null;
 
     public static function current(): Container
     {
-        return self::$current ?? throw new LogicException('No active container. Call helpers inside a request or ContainerContext::run().');
+        return self::$current ?? throw new LogicException('No active container.');
     }
 
     public static function run(Container $container, callable $callback): mixed
