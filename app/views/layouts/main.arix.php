@@ -7,8 +7,7 @@
     <meta name="description" content="{{ $description ?? '' }}">
     <link rel="canonical" href="{{ url()->current() }}">
     <link rel="stylesheet" href="{{ asset('styles/app.css') }}?v=3">
-    <script src="{{ asset('scripts/htmx.js') }}?v=2.0.11" defer></script>
-    <script src="{{ asset('scripts/app.js') }}?v=1" defer></script>
+    <script type="module" src="{{ asset('scripts/app.js') }}?v=2"></script>
 </head>
 <body>
     <a class="skip-link" href="#main-content">{{ trans('nav.skip') }}</a>
