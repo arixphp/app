@@ -6,5 +6,5 @@ use App\Controllers\AboutController;
 use App\Controllers\WelcomeController;
 use Arix\Facades\Route;
 
-Route::get('/', [WelcomeController::class, 'index'])->cache(ttl: 300);
+Route::get('/', [WelcomeController::class, 'index']);
 Route::get('/about', [AboutController::class, 'index']);

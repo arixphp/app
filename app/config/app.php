@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 return [
-    'debug' => Arix\Support\Environment::boolean('APP_DEBUG'),
+    'debug' => env('APP_DEBUG', false),
     'base_path' => '',
     'locales' => ['es', 'en'],
     'default_locale' => 'en',
