@@ -6,5 +6,5 @@ use App\Controllers\AboutController;
 use App\Controllers\WelcomeController;
 use Arix\Facades\Route;
 
-Route::get('/', [WelcomeController::class, 'index']);
-Route::get('/about', [AboutController::class, 'index']);
+Route::get('/', [WelcomeController::class, 'index'])->name('home');
+Route::get('/about', [AboutController::class, 'index'])->name('about');

@@ -124,7 +124,39 @@ class RouteRegistry
 
     public function dispatcher(): Dispatcher
     {
-        return $this->compiled ??= new CompiledDispatcher($this->collector($this->routes)->getData());
+        if ($this->compiled === null) {
+            $this->assertUniqueNames($this->routes);
+
+            foreach ($this->routes as $route) {
+                $route->lock();
+            }
+
+            $this->compiled = new CompiledDispatcher($this->collector($this->routes)->getData());
+        }
+
+        return $this->compiled;
+    }
+
+    public function named(string $name): RouteDefinition|null
+    {
+        foreach ($this->routes as $route) {
+            if ($route->name === $name) {
+
+                return $route;
+            }
+        }
+
+        return null;
+    }
+
+    public function has(string $name): bool
+    {
+        return $this->named($name) !== null;
+    }
+
+    public function ensureUniqueNames(): void
+    {
+        $this->assertUniqueNames($this->routes);
     }
 
     /** @return list<string> */
@@ -148,5 +180,23 @@ class RouteRegistry
         }
 
         return $collector;
+    }
+
+    /** @param list<RouteDefinition> $routes */
+    private function assertUniqueNames(array $routes): void
+    {
+        $seen = [];
+
+        foreach ($routes as $route) {
+            if ($route->name === null) {
+                continue;
+            }
+
+            if (isset($seen[$route->name])) {
+                throw new LogicException("Duplicate route name: {$route->name}");
+            }
+
+            $seen[$route->name] = true;
+        }
     }
 }

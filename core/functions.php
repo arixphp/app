@@ -5,6 +5,9 @@ declare(strict_types=1);
 use Arix\Config\Repository;
 use Arix\Container\ContainerContext;
 use Arix\Localization\Translator;
+use Arix\Routing\RouteRegistry;
+use Arix\Routing\RouteResolver;
+use Arix\Routing\RouteUrlGenerator;
 use Arix\Routing\UrlGenerator;
 use Arix\Views\Contracts\View;
 use Arix\Views\ViewFactory;
@@ -64,6 +67,27 @@ if (! function_exists('asset')) {
     function asset(string $path): string
     {
         return ContainerContext::current()->get(UrlGenerator::class)->asset($path);
+    }
+}
+
+if (! function_exists('route')) {
+    /** @param array<string, string|int> $params */
+    function route(string $name, array $params = [], bool $absolute = true): string
+    {
+        try {
+            $container = ContainerContext::current();
+        } catch (LogicException) {
+            return RouteResolver::fromCwd()->to($name, $params, $absolute);
+        }
+
+        $registry = $container->get(RouteRegistry::class);
+        $urls = $container->get(UrlGenerator::class);
+
+        if (! $registry instanceof RouteRegistry || ! $urls instanceof UrlGenerator) {
+            throw new LogicException('Route services are unavailable.');
+        }
+
+        return (new RouteUrlGenerator($registry, $urls))->to($name, $params, $absolute);
     }
 }
 
