@@ -182,6 +182,8 @@
         "Support/ForbidInstance.php": "daecb9700598e92ea9df2ae6530a0b82075350dfb7e4b2cece803ee8cba15c3c",
         "Support/Path.php": "d3970bf5b73de2993189451f5189888fd3f328c2b361c319fce68f749035c905",
         "Support/Str.php": "05a90dcb2ddd1e7ad162eec3cb33238e583e38f80f598fd4dcf56c34097c1239",
+        "Testing/TestCase.php": "7eeb0adff3254980ca8d7ff1ba3bf3aadfa780751bf8616e5eaae4994d7fb400",
+        "Testing/TestResponse.php": "22f331cf596c3a936ef48ebd71fc8d05327519e41142f18d4fa44532bac26924",
         "Views/BladeAdapter.php": "2f467994a15968e49d64fa730270a5dc6cbb859cc0c7c7e78b1173923dd5e726",
         "Views/CompiledTemplateCache.php": "119e60e8e09387d4a9fad7687afc9adc0637421cf97261ce0885ea3e67ff8a10",
         "Views/Contracts/View.php": "9a4f91c39cefe19932409a795cdea285acdba4fa2e08aca076e5eca18513ed43",
@@ -196,5 +198,5 @@
         "imports.json": "5ce7d1ce4ff28e9348ba4eb6ca6d4ead660cc1506be839088f9a86de5dccfbf0",
         "stubs/error.html": "e83a401a6856aa86eb6483c6a31249b57d945594228ec9c5a594f68c67b09fe1"
     },
-    "id": "828d7264ab5f970388d6f1815e5f6717bbd1822cf040e3de9aa88c4f8a489c9a"
+    "id": "10e86ed06f5a5a221c98d60340c3a68c9a617d5904d2b6419832707ff4587980"
 }

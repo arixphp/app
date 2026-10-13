@@ -23,7 +23,7 @@
 
 	route {
 		# Deny private directories and hidden path segments before handling files.
-		@private path_regexp private `(?i)(?:^/(?:app|core|cli|tests|docs|storage)(?:/|$)|(?:^|/)\.)`
+		@private path_regexp private `(?i)(?:^/(?:app|core|cli|tests|docs|storage)(?:/|$)|^/phpunit\.xml(?:\.dist)?$|(?:^|/)\.)`
 		respond @private 403
 
 		# assets/fonts is more restrictive than the rest of assets/.

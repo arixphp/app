@@ -5,6 +5,10 @@ DirectoryIndex index.php
     Require all denied
 </FilesMatch>
 
+<FilesMatch "(?i)^phpunit\.xml(?:\.dist)?$">
+    Require all denied
+</FilesMatch>
+
 <IfModule mod_headers.c>
     Header always set X-Content-Type-Options "nosniff"
 </IfModule>
