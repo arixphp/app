@@ -2,3 +2,5 @@
 .opencode
 .agents
 frankenphp
+.core-backup-*
+.core-update.lock

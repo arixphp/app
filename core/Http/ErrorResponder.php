@@ -17,7 +17,8 @@ class ErrorResponder
         private readonly null|Closure $logger = null
     ) {}
 
-    public function respond(Throwable $exception): Response
+    /** @param Closure(int, string): (string|null)|null $renderView */
+    public function respond(Throwable $exception, Closure|null $renderView = null): Response
     {
         $headers = [];
         $diagnostics = false;
@@ -50,7 +51,28 @@ class ErrorResponder
             }
         }
 
-        $html = $diagnostics ? null : new ErrorPageRenderer()->render($status->value, $message);
+        $html = null;
+
+        if (! $diagnostics) {
+            $level = ob_get_level();
+
+            try {
+                if ($renderView !== null) {
+                    // Discard incidental output, including flushed template buffers.
+                    ob_start(static fn (string $output): string => '');
+                    $html = $renderView($status->value, $message);
+                }
+            } catch (Throwable) {
+                // A failed application view must never replace the original HTTP error.
+            } finally {
+                while (ob_get_level() > $level) {
+                    ob_end_clean();
+                }
+            }
+
+            $html ??= new ErrorPageRenderer()->render($status->value, $message);
+        }
+
         $response = new Response($html ?? $message, $status->value, $headers);
         $response->headers->set('Content-Type', $html === null ? 'text/plain; charset=UTF-8' : 'text/html; charset=UTF-8');
         $response->headers->set('Cache-Control', 'no-store');

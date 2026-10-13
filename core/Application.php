@@ -87,6 +87,7 @@ class Application
             self::servicesClosure($this->servicesFile)($container);
         }
 
+        $config = $container->get(Repository::class);
         $cachePath = $config->get('cache.path', 'storage/cache');
 
         if (! is_string($cachePath) || $cachePath === '') {
@@ -102,6 +103,9 @@ class Application
         if (! is_array($app)) {
             throw new RuntimeException('Application configuration is missing.');
         }
+
+        $app['locale'] = $app['default_locale'] ?? null;
+        $container->instance(Repository::class, new Repository(array_replace($config->get(), ['app' => $app])));
 
         ViewServices::register($container, $this->root, $container->get(Request::class), [
             'app' => $app,

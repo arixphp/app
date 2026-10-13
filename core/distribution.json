@@ -7,7 +7,7 @@
     ],
     "files": {
         ".htaccess": "b839261c1ee52349560b726218f0bc9cb1afee95e07e9d50f95919d5e8e6cdf2",
-        "Application.php": "5ddf3ba4b08f01f611e7e40bddc89e542c70ba24f209638652494e2773c95742",
+        "Application.php": "b4965a372ba75f09a8d239756c54b10453f711924f498a668eb0c2ad68a24c87",
         "BladeOne/BladeOne.php": "4a558e29c88930239f96a22027de04360112f9329dd1aa7e6382fcfbea336be9",
         "BladeOne/BladeOneCache.php": "3292868238c1af1ab59856097672af5ffaec412501344d6944c419ad722468cc",
         "BladeOne/BladeOneCacheRedis.php": "1b27912eecddb97042b05f9d2192c3e578f3a68069982c080f446dddfe72ada7",
@@ -46,9 +46,9 @@
         "FastRoute/RouteParser/Std.php": "2d349cd779da7a36db4c7e1a2c68ce1821253c09a810785b0c13e1bd0771f261",
         "FastRoute/functions.php": "6b55310ab67a6d4e5bae9583dc7daa27464a765221331c24ebab17a30d6c4fc7",
         "Http/ErrorPageRenderer.php": "475a6d0e1f086e1d124db7c633f28e2a29e436077627f19c62382718938deae1",
-        "Http/ErrorResponder.php": "ce937718281eead8e539756101659c60d4b3afde5760a4c9a52d2017d21d8637",
+        "Http/ErrorResponder.php": "c506aab36e1705f643d007e1df41be8097f1fff0de489077562a52abaebaa40b",
         "Http/HttpException.php": "4866b98c56dce4e71b18362e3989d07cb65e840b5acb711f7af3480f5d2034ed",
-        "Http/Kernel.php": "5a3ea1b7dca83fc9e443056c32c45d8274f6355e7b64504f9e7c8099c7349dbc",
+        "Http/Kernel.php": "2a71c9ec80f2d6b86a2a8b4163ee9a38335be84867cb806a3b75a4bd18ec2708",
         "Http/QueryPathValidator.php": "8e1f3dc8c582afffa4449fa53cc4ddd70dfc3f2f930dfc96bf5ee2e139058293",
         "Http/RequestFactory.php": "93698956b856b69f674a91fc2dc702b43e360edd54549f4a8a58932b86b237a0",
         "HttpFoundation/AcceptHeader.php": "6547e8103cb778456666cc9f468ed1c6c2508b7c38e4acfba6557745fd01437b",
@@ -189,16 +189,17 @@
         "Views/BladeAdapter.php": "2f467994a15968e49d64fa730270a5dc6cbb859cc0c7c7e78b1173923dd5e726",
         "Views/CompiledTemplateCache.php": "119e60e8e09387d4a9fad7687afc9adc0637421cf97261ce0885ea3e67ff8a10",
         "Views/Contracts/View.php": "9a4f91c39cefe19932409a795cdea285acdba4fa2e08aca076e5eca18513ed43",
+        "Views/ErrorViewRenderer.php": "e170615f27ec1fbf284b9c29f4d0085a4528a730b16f75e7685c122aa42a2d1f",
         "Views/NativeRenderContext.php": "344112e69600716d009d25643f3e237f36bb8641aa62bc9901b86a4ed20ea42d",
         "Views/TemplateEngine.php": "dda6ce711253db070350358e35a2d3dd93d9bd7fc25da532a83b7f00fe5b954b",
         "Views/TemplateResolver.php": "f168ae2c8f69bc03b96ba0abe759011e652f03fbd5ec4ba1792e8e6fd2b8c675",
         "Views/View.php": "4f2c2c38d5d9c1af92d79dc0f87e89710e0d32a1ca9ed123a763e8b5eabee195",
         "Views/ViewFactory.php": "e4a19080279d546b193495395ad0140d225a883aefbc2d8fc0006f57e3bd0b35",
-        "Views/ViewServices.php": "97f12661d83ec0abcee48067ce219092c99ff8c3e5e3bfbc64e3e8cc93bad955",
+        "Views/ViewServices.php": "89449ac1784a43206f72d9fa3c719a395600096f464d1107d5ce22451e9caa0c",
         "autoload.php": "3d8db90a5c578a50a65b49d2640b6dca96faf0023c3904b09a83721ffc73d343",
         "functions.php": "91618f9797977168248c0347d4045d21b449eeb6bd391aa94378f648dcbbad99",
         "imports.json": "5ce7d1ce4ff28e9348ba4eb6ca6d4ead660cc1506be839088f9a86de5dccfbf0",
         "stubs/error.html": "e83a401a6856aa86eb6483c6a31249b57d945594228ec9c5a594f68c67b09fe1"
     },
-    "id": "1d03df3aa1636419518fbe38bb66125973120dbd29cfe388e3449354d45957b0"
+    "id": "bef9ce049f1de8e3d0e3754c09e954c4e11d64ef8d8a7a7d876a131d0335d525"
 }

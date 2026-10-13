@@ -10,6 +10,7 @@ use Arix\Container\ContainerContext;
 use Arix\Contracts\RequestHandler;
 use Arix\HttpFoundation\Request;
 use Arix\HttpFoundation\Response;
+use Arix\Views\ErrorViewRenderer;
 use Closure;
 use Throwable;
 
@@ -61,7 +62,14 @@ class Kernel
                 $method = $request->server->get('REQUEST_METHOD') === HttpMethod::HEAD->value ? HttpMethod::HEAD->value : HttpMethod::GET->value;
                 $fallback = new Request(server: ['REQUEST_METHOD' => $method], content: '');
 
-                return $this->errors->respond($exception)->prepare($fallback);
+                return $this->errors->respond($exception, static function (int $status, string $message) use ($container): string|null {
+                    if (! $container->has(ErrorViewRenderer::class)) {
+
+                        return null;
+                    }
+
+                    return $container->get(ErrorViewRenderer::class)->render($status, $message);
+                })->prepare($fallback);
             }
         });
     }

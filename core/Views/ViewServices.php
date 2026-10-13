@@ -71,6 +71,8 @@ class ViewServices
         $container->instance(Translator::class, new Translator($lang, $locales, $defaultLocale, $defaultLocale));
         $container->instance(UrlGenerator::class, new UrlGenerator($basePath, $path));
         $container->instance(ViewFactory::class, new ViewFactory());
-        $container->instance(TemplateEngine::class, new TemplateEngine($views, $cachePath, TemplateEngine::VERSION . "\0" . $cacheVersion));
+        $engine = new TemplateEngine($views, $cachePath, TemplateEngine::VERSION . "\0" . $cacheVersion);
+        $container->instance(TemplateEngine::class, $engine);
+        $container->instance(ErrorViewRenderer::class, new ErrorViewRenderer($engine, is_string($app['name'] ?? null) ? $app['name'] : 'ArixPHP'));
     }
 }
