@@ -2,5 +2,6 @@
 .opencode
 .agents
 frankenphp
+arix
 .core-backup-*
 .core-update.lock
