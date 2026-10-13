@@ -6,16 +6,16 @@ Sources of truth: `README.md` (usage) and `docs/IMPLEMENTATION.md` (architecture
 
 ## Commands
 
-- Tests (the only verification): `php tests/run.php` — a single suite, ≈1 s, nonzero exit code if anything fails. Test/assertion counts change on every run: do not cite them as a contract.
-- There is no single-test selector, linter, formatter, type checker, CI, or `composer.json`/`package.json`. Do not invent commands or add tooling. To check syntax: `php -l <file>`.
+- Application tests: installed `arix tests`, or `php ../cli/arix tests` from this directory. The CLI supplies Pest; failures and empty suites return nonzero. Test/assertion counts are not contracts.
+- Arix has no local runner, Composer installation, formatter, static analyzer, or CI workflow. Test configuration is `phpunit.xml`, with bootstrap `tests/autoload.php`. To check syntax: `php -l <file>`.
 - Development server (from the root): `SERVER_NAME=http://127.0.0.1:8181 ./frankenphp run --config Caddyfile --adapter caddyfile` with the local FrankenPHP binary. Bare `php-server` loads no access rules; `php -S` and direct `php index.php` are unsupported.
-- Debugging: only through the `APP_DEBUG=true|1` environment variable (`APP_DEBUG=true php tests/run.php`). There are no `.env` files.
-- PHP ≥ 8.3 (the local default is 8.4); `core/Version.php` uses typed class constants.
+- Debugging: only through the `APP_DEBUG=true|1` environment variable (`APP_DEBUG=true arix tests`). There are no `.env` files.
+- PHP ≥ 8.4.1 and ext-mbstring, enforced by `core/autoload.php`.
 - Local PHP prints an Xdebug warning to stderr on every run: this is noise, not a failure.
 
 ## Adding or Changing Tests
 
-Everything is in `tests/*Test.php`: classes extending `Arix\Testing\TestCase` with `test*` methods, using `$this->assert*()`, `$this->raises()`, and `$this->fixture()` (temporary files that clean themselves up). `tests/run.php` is the thin runner. Run the full suite; iterate using `grep FAIL` on the output.
+`tests/**/*Test.php` contains only tests of application-owned `app/` code, written in Pest syntax (`it()`/`test()` and `expect()`). Framework tests belong to `../cli/tests/Core/`. `tests/autoload.php` loads the local core and application/test classes without Composer or the HTTP entry point. `tests/Pest.php` binds the framework `Arix\Testing\TestCase`, so `$this->get('/path')` dispatches in-process and returns an `Arix\Testing\TestResponse` with chainable `assertStatus()`, `assertOk()`, and `assertSee()` assertions. Run the suite through the CLI; do not reintroduce `tests/run.php` or install Pest in Arix. XML and tests are trusted developer code, not a sandbox. `phpunit.xml` and `phpunit.xml.dist` must stay protected in Apache, Caddy and IIS.
 
 ## Architecture
 

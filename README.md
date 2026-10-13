@@ -11,7 +11,7 @@ QUERY, and extension methods. Input validation is not included at this stage.
 
 ## Requirements
 
-- PHP 8.3+, tokenizer, JSON, and PCRE (standard extensions).
+- PHP 8.4.1+, mbstring, tokenizer, JSON, and PCRE.
 - Apache with mod_rewrite, mod_authz_core, and appropriate AllowOverride settings,
   or IIS with PHP and URL Rewrite. Other servers require equivalent rules.
 - A private, writable cache for `.arix.php` views. Native `.php` views
@@ -34,13 +34,13 @@ core/                     Replaceable framework, Arix\ namespace
     functions.php         view(), trans(), url(), asset(), and config() helpers
     Config/               Read-only configuration repository
     Container/            Explicit services and request scope
-    Testing/              Minimal test framework (TestCase and asserts)
     Version.php           Version included in cache keys
 styles/                   Public CSS, no build
 scripts/                  Public JavaScript, no build
 assets/                   Public images and video
     fonts/                Public fonts; prefer WOFF2
-tests/                    Local tests
+phpunit.xml               Private application test configuration
+tests/                    Application-owned Pest tests and autoload.php
 ```
 
 `app/` and `core/` are not accessible over HTTP. The server serves `styles/`,
@@ -55,7 +55,7 @@ empty, false, 0, or any invalid value leaves it disabled. Do not cast
 strings to booleans: `"false"` is truthy in PHP. No `.env` files are loaded.
 
 ```sh
-APP_DEBUG=true php tests/run.php
+APP_DEBUG=true arix tests
 APP_DEBUG=true SERVER_NAME=http://127.0.0.1:8181 ./frankenphp run --config Caddyfile --adapter caddyfile
 ```
 
@@ -463,7 +463,8 @@ without publishing a maintenance endpoint.
 
 1. Upload `index.php`, `app/`, `core/`, `styles/`, `scripts/`, `assets/`, `storage/`, `robots.txt`, and
    `.htaccess` or `web.config`. Include each directory's protections.
-2. Do not deploy tests or documentation.
+2. Do not deploy tests, `phpunit.xml`, or documentation. Server rules protect
+   `tests/`, `phpunit.xml`, and `phpunit.xml.dist` if uploaded accidentally.
 3. Configure the language, base URL, and cache through the control panel/FTP.
 4. Verify `/`, `/about`, assets, 404, HEAD, OPTIONS, and registered methods.
 5. Verify that `/app/config/app.php`, `/core/functions.php`, and files under `/storage/` return 403/404,
@@ -518,14 +519,57 @@ previous PHP router, Caddy follows them and can expose files outside the project
 
 ## Tests
 
+From the application root, use the installed Arix CLI:
+
 ```sh
-php tests/run.php
+arix tests
+# Or select an application from another directory:
+arix tests --path=/path/to/application
 ```
 
-Tests cover the collector/facade, controllers, methods, body, autoloading,
-configured translations, path safety, caching, templates, and HTTP runtime
-selection. Tests run in-process without starting a server. PHP CLI renders
-nothing: `php index.php` exits nonzero. `php -S` is unsupported. To start the
+In this workspace, the source CLI can be invoked from `arix/` with
+`php ../cli/arix tests`. Arix has no Composer installation: Pest and PHPUnit
+belong to the CLI, and the deployed core remains dependency-free.
+
+Keep only tests of application-owned `app/` code under `tests/`, using Pest
+syntax (`it()`/`test()` and `expect()`). Framework tests live in the CLI project.
+The root `phpunit.xml` selects `tests/`, limits coverage sources to `app/`, and
+loads `tests/autoload.php`. This bootstrap loads the local core, application
+classes, and optional `Tests\\` support classes without executing `index.php`.
+`tests/Pest.php` binds the framework `Arix\Testing\TestCase`, so tests dispatch
+requests in-process and assert with a fluent response API:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use Arix\Constants\HttpStatusCode;
+
+it('renders the about page with its translations', function (): void {
+    $this->get('/about')
+        ->assertStatus(HttpStatusCode::OK)
+        ->assertSee('About ArixPHP')
+        ->assertSee('A small framework for content-driven websites.');
+});
+```
+
+`get()` handles the request through the application kernel without starting a
+server; `post()`, `put()`, `patch()`, and `delete()` dispatch the other
+writable methods the same way. `assertOk()` checks for status 200; `assertSee()`
+matches rendered (escaped) HTML content and accepts a single string or a list.
+
+The CLI runs Pest in an isolated PHP process with the application as its root;
+the application's core and helpers take precedence over CLI code. Tests and XML
+bootstrap configuration are trusted executable developer code, not a sandbox.
+Failures and empty suites return a nonzero exit status. The distributed CLI is
+a self-contained executable with PHP embedded. It extracts bundled runner
+dependencies into a private temporary directory and cleans it on normal process
+shutdown; it requires writable temporary storage but no downloads or system PHP.
+
+`get()` creates its own application/kernel and container scope per request;
+do not assume a shared HTTP bootstrap. PHP CLI renders nothing:
+`php index.php` exits nonzero. `php -S` is unsupported. To start the
 development server, use FrankenPHP from the project root:
 
 ```sh
