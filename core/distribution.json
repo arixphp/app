@@ -1,6 +1,6 @@
 {
     "format": 1,
-    "contract": "standalone-http-v1",
+    "contract": "arix-core-v1",
     "php": ">=8.4.1",
     "extensions": [
         "mbstring"
@@ -170,9 +170,11 @@
         "HttpFoundation/UrlHelper.php": "e70932973c3d56c1533bc790cad26d4c65c164965a77828f2fcfeb894645fac9",
         "Localization/Translator.php": "e403e4a84d69714725d00fc4a104bc0e392102bc5e8a3fe43d641729b0da4aa0",
         "Routing/ControllerDispatcher.php": "98e419c1ad42de8e0f5c1e27c2abf093928eafd472f39d4f244d6915b7b4d29d",
-        "Routing/RouteDefinition.php": "77fbdafb36315f6dc714d853be92bf6924fa7b0d377c49d83dc79652386b1205",
+        "Routing/RouteDefinition.php": "0ace861c572461df956901c02a4f0ea00824fdf70983359841d538d74297b56d",
         "Routing/RouteMatch.php": "9a41c9e3240c3d0aaa19d026d5e7ac9b23ed1e62a807c25fb88c59be001c5a5d",
-        "Routing/RouteRegistry.php": "5ec939b671d38a335e5d1a8b000f5fdb4eb02662af9ffac3a7f339870066b1d3",
+        "Routing/RouteRegistry.php": "b52735bad0a8c54b577149d677b2939833ec753e93d411085fd501ce6cb01d2c",
+        "Routing/RouteResolver.php": "a3abdf7ecf6473114b5f5ec53e89d3a47d2e9e4f2338f617d645f32b8c45148c",
+        "Routing/RouteUrlGenerator.php": "0007889ceb2fe23bcb052fc8c85ccbc1132a0a8660adc7e6a8ea0d3af4ea12e3",
         "Routing/Router.php": "3862e64435a7d0fdaec1c7df8937d62bb92448eb98b09d0190eccdfd6c51c934",
         "Routing/RoutingHandler.php": "e66e2c54628a458febb7af356f96007d8b23d84ab3c7ea92903a29c85f84005a",
         "Routing/UrlGenerator.php": "e86505c2254516b89ce1314c49d3d2a60dea7459cd49494b09e263d6d867a9f0",
@@ -194,9 +196,9 @@
         "Views/ViewFactory.php": "e4a19080279d546b193495395ad0140d225a883aefbc2d8fc0006f57e3bd0b35",
         "Views/ViewServices.php": "97f12661d83ec0abcee48067ce219092c99ff8c3e5e3bfbc64e3e8cc93bad955",
         "autoload.php": "3d8db90a5c578a50a65b49d2640b6dca96faf0023c3904b09a83721ffc73d343",
-        "functions.php": "209c5bb03afe0f68f4ea685cade68a87981087c4f9018b5f561610d5844410a5",
+        "functions.php": "91618f9797977168248c0347d4045d21b449eeb6bd391aa94378f648dcbbad99",
         "imports.json": "5ce7d1ce4ff28e9348ba4eb6ca6d4ead660cc1506be839088f9a86de5dccfbf0",
         "stubs/error.html": "e83a401a6856aa86eb6483c6a31249b57d945594228ec9c5a594f68c67b09fe1"
     },
-    "id": "10e86ed06f5a5a221c98d60340c3a68c9a617d5904d2b6419832707ff4587980"
+    "id": "1d03df3aa1636419518fbe38bb66125973120dbd29cfe388e3449354d45957b0"
 }
