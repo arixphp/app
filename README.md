@@ -12,7 +12,7 @@ ArixPHP is under active development.
 ## Learning Arix
 
 The official documentation will be available at
-[arixphp.omarbarbosa.com](https://arixphp.omarbarbosa.com). It has not been
+[arix.omarbarbosa.com](https://arix.omarbarbosa.com). It has not been
 published yet.
 
 ## Security Vulnerabilities
