@@ -1,9 +1,15 @@
 /*
+ * Arix CSS version: 1.1.0
  * Arix CSS · components (components layer)
  * Application look: page shell, header, navigation, card and reusable
  * classes. Everything driven by tokens (--color-*, --space-*).
  */
 @layer components {
+    /* Shared with load() in arix.js. No animation or input suppression. */
+    :where([data-arix-busy], [aria-busy="true"]) {
+        cursor: progress;
+    }
+
     /* ---- page shell (the body is the container, as in app.css) ---- */
     body {
         max-width: 68rem;

@@ -1,0 +1,18 @@
+/*
+ * Arix CSS · application theme overrides (application layer)
+ *
+ * Reassign the semantic aliases (--color-*, --space-*, ...) defined in
+ * arix/tokens.css. Keep this file free of selectors so future managed
+ * token additions keep working. Example:
+ *
+ * @layer application {
+ *     :root {
+ *         --color-accent: #0e8c6f;
+ *     }
+ *
+ *     [data-theme="dark"] {
+ *         --color-accent: #80e8c7;
+ *     }
+ * }
+ */
+@layer application {}
