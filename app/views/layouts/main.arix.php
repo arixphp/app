@@ -6,8 +6,13 @@
     <title>{{ $title }} · {{ config('app.name') }}</title>
     <meta name="description" content="{{ $description ?? '' }}">
     <link rel="canonical" href="{{ url()->current() }}">
-    <link rel="stylesheet" href="{{ asset('styles/app.css') }}?v=3">
-    <script type="module" src="{{ asset('scripts/app.js') }}?v=2"></script>
+    <link rel="icon" href="{{ url('/favicon.ico') }}">
+    <link rel="stylesheet" href="{{ versioned_asset('styles/app.css') }}">
+    <script type="module" src="{{ versioned_asset('scripts/app.js') }}"></script>
+    @if (!empty($_SERVER['FRANKENPHP_HOT_RELOAD']))
+        <meta name="frankenphp-hot-reload:url" content="{{ $_SERVER['FRANKENPHP_HOT_RELOAD'] }}">
+        <script type="module" src="{{ asset('scripts/arix/dev-reload.js') }}"></script>
+    @endif
 </head>
 <body>
     <a class="skip-link" href="#main-content">{{ trans('nav.skip') }}</a>
