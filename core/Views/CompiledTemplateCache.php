@@ -47,7 +47,7 @@ class CompiledTemplateCache
 
     public function path(string $source, string $code): string
     {
-        return $this->directory.DIRECTORY_SEPARATOR.hash('sha256', $this->version."\0".$source."\0".$code).'.php';
+        return $this->directory . DIRECTORY_SEPARATOR . hash('sha256', $this->version . "\0" . $source . "\0" . $code) . '.php';
     }
 
     public function remember(string $source, string $code, Closure $compile): string

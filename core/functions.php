@@ -9,6 +9,7 @@ use Arix\Routing\RouteRegistry;
 use Arix\Routing\RouteResolver;
 use Arix\Routing\RouteUrlGenerator;
 use Arix\Routing\UrlGenerator;
+use Arix\Support\AssetVersioner;
 use Arix\Views\Contracts\View;
 use Arix\Views\ViewFactory;
 
@@ -67,6 +68,14 @@ if (! function_exists('asset')) {
     function asset(string $path): string
     {
         return ContainerContext::current()->get(UrlGenerator::class)->asset($path);
+    }
+}
+
+if (! function_exists('versioned_asset')) {
+    function versioned_asset(string $path): string
+    {
+
+        return ContainerContext::current()->get(AssetVersioner::class)->asset($path);
     }
 }
 

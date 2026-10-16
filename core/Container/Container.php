@@ -49,7 +49,7 @@ class Container
             throw new UnknownServiceException("Service is not registered: {$id}");
         }
         if (in_array($id, $this->resolving, true)) {
-            throw new CircularServiceException('Circular dependency: '.implode(' -> ', [...$this->resolving, $id]));
+            throw new CircularServiceException('Circular dependency: ' . implode(' -> ', [...$this->resolving, $id]));
         }
         $this->resolving[] = $id;
         try {

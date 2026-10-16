@@ -21,12 +21,12 @@ spl_autoload_register(static function (string $class): void {
         return;
     }
 
-    $file = __DIR__.'/'.str_replace('\\', '/', $relative).'.php';
+    $file = __DIR__ . '/' . str_replace('\\', '/', $relative) . '.php';
 
     if (is_file($file)) {
         require_once $file;
     }
 });
 
-require_once __DIR__.'/functions.php';
-require_once __DIR__.DIRECTORY_SEPARATOR.'FastRoute'.DIRECTORY_SEPARATOR.'functions.php';
+require_once __DIR__ . '/functions.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'FastRoute' . DIRECTORY_SEPARATOR . 'functions.php';

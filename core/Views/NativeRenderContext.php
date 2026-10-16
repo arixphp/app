@@ -8,7 +8,7 @@ use RuntimeException;
 
 class NativeRenderContext
 {
-    private ?string $layout = null;
+    private null|string $layout = null;
 
     private array $layoutData = [];
 

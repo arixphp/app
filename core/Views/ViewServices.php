@@ -8,6 +8,7 @@ use Arix\Container\Container;
 use Arix\HttpFoundation\Request;
 use Arix\Localization\Translator;
 use Arix\Routing\UrlGenerator;
+use Arix\Support\AssetVersioner;
 use Arix\Support\Path;
 use InvalidArgumentException;
 
@@ -70,6 +71,7 @@ class ViewServices
 
         $container->instance(Translator::class, new Translator($lang, $locales, $defaultLocale, $defaultLocale));
         $container->instance(UrlGenerator::class, new UrlGenerator($basePath, $path));
+        $container->instance(AssetVersioner::class, new AssetVersioner($base, $container->get(UrlGenerator::class)));
         $container->instance(ViewFactory::class, new ViewFactory());
         $engine = new TemplateEngine($views, $cachePath, TemplateEngine::VERSION . "\0" . $cacheVersion);
         $container->instance(TemplateEngine::class, $engine);

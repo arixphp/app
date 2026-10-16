@@ -6,8 +6,8 @@ namespace Arix\Routing;
 
 use Arix\Constants\HttpMethod;
 use Arix\Constants\HttpStatusCode;
-use Arix\Http\HttpException;
 use Arix\FastRoute\Dispatcher;
+use Arix\Http\HttpException;
 
 use function in_array;
 

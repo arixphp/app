@@ -11,6 +11,7 @@ use RuntimeException;
 use function count;
 use function in_array;
 use function is_array;
+use function is_int;
 use function is_string;
 
 class BladeAdapter extends BladeOne
@@ -26,7 +27,7 @@ class BladeAdapter extends BladeOne
         // Template paths are resolved through TemplateResolver; the parent
         // lookup is never used. Compiled files live in the private cache.
         parent::__construct([], $this->cache->directory(), self::MODE_AUTO, 0);
-        $this->directive('json', static fn (string $expression): string => '<?php echo json_encode('.$expression.', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR); ?>');
+        $this->directive('json', static fn (string $expression): string => '<?php echo json_encode(' . $expression . ', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR); ?>');
     }
 
     public function setNativeRunner(Closure $runner): void
@@ -34,7 +35,16 @@ class BladeAdapter extends BladeOne
         $this->nativeRunner = $runner;
     }
 
-    public function run(?string $view = null, array $variables = [], array $seed = []): string
+    public static function get($array, $key, $default = null): mixed
+    {
+        if (is_int($key)) {
+            $key = (string) $key;
+        }
+
+        return parent::get($array, $key, $default);
+    }
+
+    public function run(null|string $view = null, array $variables = [], array $seed = []): string
     {
         if ($view === null) {
             return parent::run(null, $variables);
@@ -116,7 +126,7 @@ class BladeAdapter extends BladeOne
         return parent::setIsCompiled($bool);
     }
 
-    public function getTemplateFile(?string $templateName = ''): string
+    public function getTemplateFile(null|string $templateName = ''): string
     {
         $templateName = empty($templateName) ? $this->fileName : $templateName;
 
@@ -127,7 +137,7 @@ class BladeAdapter extends BladeOne
         return $this->templateFileCache[$templateName] = $this->resolver->resolve($templateName);
     }
 
-    public function getCompiledFile(?string $templateName = ''): string
+    public function getCompiledFile(null|string $templateName = ''): string
     {
         $templateName = empty($templateName) ? $this->fileName : $templateName;
 
@@ -145,7 +155,7 @@ class BladeAdapter extends BladeOne
         return $this->compiledFileCache[$templateName] = $this->cache->path($source, $code);
     }
 
-    public function compile(?string $templateName = null, bool $forced = false)
+    public function compile(null|string $templateName = null, bool $forced = false)
     {
         $name = $templateName ?? '';
 
@@ -171,7 +181,7 @@ class BladeAdapter extends BladeOne
         return $this->compiledFileCache[$name] = $compiled;
     }
 
-    public function isExpired(?string $fileName): bool
+    public function isExpired(null|string $fileName): bool
     {
         // Compiled paths embed a content hash, so freshness never depends
         // on modification times.

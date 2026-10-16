@@ -11,7 +11,7 @@ use function in_array;
 
 class TemplateEngine
 {
-    public const string VERSION = '1';
+    public const string VERSION = '2';
 
     private array $active = [];
 

@@ -7,8 +7,8 @@ namespace Arix\Routing;
 use Arix\Container\Container;
 use Arix\HttpFoundation\Request;
 use Arix\HttpFoundation\Response;
-use Arix\Views\TemplateEngine;
 use Arix\Views\Contracts\View as ViewContract;
+use Arix\Views\TemplateEngine;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionUnionType;
@@ -162,7 +162,7 @@ class ControllerDispatcher
                 throw new RuntimeException('Controller filename must match its class exactly.');
             }
 
-            $path .= DIRECTORY_SEPARATOR.$segment;
+            $path .= DIRECTORY_SEPARATOR . $segment;
 
             if (is_link($path)) {
                 throw new RuntimeException('Controller symlinks are not supported.');
@@ -171,7 +171,7 @@ class ControllerDispatcher
 
         $file = realpath($path);
 
-        if ($file === false || ! is_file($file) || ! str_starts_with($file, $base.DIRECTORY_SEPARATOR)) {
+        if ($file === false || ! is_file($file) || ! str_starts_with($file, $base . DIRECTORY_SEPARATOR)) {
             throw new RuntimeException('Controller file is missing or outside its application.');
         }
 

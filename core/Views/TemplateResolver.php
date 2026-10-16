@@ -63,13 +63,13 @@ class TemplateResolver
         $matches = [];
 
         foreach (['.arix.php', '.php'] as $extension) {
-            $filename = $leaf.$extension;
+            $filename = $leaf . $extension;
 
             if (! in_array($filename, $entries, true)) {
                 continue;
             }
 
-            $candidate = $path.DIRECTORY_SEPARATOR.$filename;
+            $candidate = $path . DIRECTORY_SEPARATOR . $filename;
 
             if (is_link($candidate)) {
                 throw new RuntimeException("Template symlinks are not supported: {$name}");
@@ -77,7 +77,7 @@ class TemplateResolver
 
             $file = realpath($candidate);
 
-            if ($file !== false && is_file($file) && str_starts_with($file, $base.DIRECTORY_SEPARATOR)) {
+            if ($file !== false && is_file($file) && str_starts_with($file, $base . DIRECTORY_SEPARATOR)) {
                 $matches[] = $file;
             }
         }
@@ -95,7 +95,7 @@ class TemplateResolver
             throw new RuntimeException("Missing template segment: {$segment}");
         }
 
-        $child = $path.DIRECTORY_SEPARATOR.$segment;
+        $child = $path . DIRECTORY_SEPARATOR . $segment;
 
         if (is_link($child)) {
             throw new RuntimeException("Template symlinks are not supported: {$segment}");

@@ -155,7 +155,7 @@ class Str extends ForbidInstance
             return $value;
         }
 
-        return mb_substr($value, 0, $limit, 'UTF-8').$end;
+        return mb_substr($value, 0, $limit, 'UTF-8') . $end;
     }
 
     public static function words(string $value, int $words = 100, string $end = '...'): string
@@ -176,7 +176,7 @@ class Str extends ForbidInstance
             return $value;
         }
 
-        return implode(' ', array_slice($parts, 0, $words)).$end;
+        return implode(' ', array_slice($parts, 0, $words)) . $end;
     }
 
     public static function slug(string $title, string $separator = '-'): string
@@ -187,8 +187,8 @@ class Str extends ForbidInstance
 
         $value = mb_strtolower(static::ascii($title), 'UTF-8');
         $escaped = preg_quote($separator, '/');
-        $value = (string) preg_replace('/[^a-z0-9'.$escaped.']+/i', $separator, $value);
-        $value = (string) preg_replace('/'.$escaped.'{2,}/', $separator, $value);
+        $value = (string) preg_replace('/[^a-z0-9' . $escaped . ']+/i', $separator, $value);
+        $value = (string) preg_replace('/' . $escaped . '{2,}/', $separator, $value);
 
         return trim($value, $separator);
     }
@@ -203,7 +203,7 @@ class Str extends ForbidInstance
             if ($word === '') {
                 continue;
             }
-            $studly .= mb_strtoupper(mb_substr($word, 0, 1, 'UTF-8'), 'UTF-8').mb_substr($word, 1, null, 'UTF-8');
+            $studly .= mb_strtoupper(mb_substr($word, 0, 1, 'UTF-8'), 'UTF-8') . mb_substr($word, 1, null, 'UTF-8');
         }
 
         return $studly;
@@ -221,10 +221,10 @@ class Str extends ForbidInstance
         }
 
         $value = (string) preg_replace('/[\s-]+/u', $delimiter, $value);
-        $value = (string) preg_replace('/([a-z0-9])([A-Z])/u', '$1'.$delimiter.'$2', $value);
+        $value = (string) preg_replace('/([a-z0-9])([A-Z])/u', '$1' . $delimiter . '$2', $value);
         $value = mb_strtolower($value, 'UTF-8');
         $escaped = preg_quote($delimiter, '/');
-        $value = (string) preg_replace('/'.$escaped.'{2,}/', $delimiter, $value);
+        $value = (string) preg_replace('/' . $escaped . '{2,}/', $delimiter, $value);
 
         return trim($value, $delimiter);
     }
@@ -247,7 +247,7 @@ class Str extends ForbidInstance
         $words = explode(' ', mb_strtolower($value, 'UTF-8'));
 
         foreach ($words as $index => $word) {
-            $words[$index] = mb_strtoupper(mb_substr($word, 0, 1, 'UTF-8'), 'UTF-8').mb_substr($word, 1, null, 'UTF-8');
+            $words[$index] = mb_strtoupper(mb_substr($word, 0, 1, 'UTF-8'), 'UTF-8') . mb_substr($word, 1, null, 'UTF-8');
         }
 
         return implode(' ', $words);
@@ -271,7 +271,7 @@ class Str extends ForbidInstance
     {
         foreach ((array) $pattern as $item) {
             $quoted = preg_quote($item, '/');
-            $regex = '/^'.str_replace('\\*', '.*', $quoted).'$/s';
+            $regex = '/^' . str_replace('\\*', '.*', $quoted) . '$/s';
 
             if (preg_match($regex, $value) === 1) {
                 return true;
@@ -306,7 +306,7 @@ class Str extends ForbidInstance
         $bytes[8] = chr((ord($bytes[8]) & 0x3F) | 0x80);
         $hex = bin2hex($bytes);
 
-        return substr($hex, 0, 8).'-'.substr($hex, 8, 4).'-'.substr($hex, 12, 4).'-'.substr($hex, 16, 4).'-'.substr($hex, 20, 12);
+        return substr($hex, 0, 8) . '-' . substr($hex, 8, 4) . '-' . substr($hex, 12, 4) . '-' . substr($hex, 16, 4) . '-' . substr($hex, 20, 12);
     }
 
     private static function ascii(string $value): string

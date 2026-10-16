@@ -31,12 +31,12 @@ class UrlGenerator
 
     public function to(string $path = '/'): string
     {
-        return rtrim($this->basePath, '/').'/'.$this->suffix($path);
+        return rtrim($this->basePath, '/') . '/' . $this->suffix($path);
     }
 
     public function currentPath(): string
     {
-        return '/'.$this->suffix($this->currentPath);
+        return '/' . $this->suffix($this->currentPath);
     }
 
     public function current(): string
@@ -52,9 +52,9 @@ class UrlGenerator
             throw new InvalidArgumentException('Invalid public asset path.');
         }
 
-        $this->validate('/'.$relative);
+        $this->validate('/' . $relative);
 
-        return rtrim($this->basePath, '/').'/'.$relative;
+        return rtrim($this->basePath, '/') . '/' . $relative;
     }
 
     private function suffix(string $path): string
@@ -62,7 +62,7 @@ class UrlGenerator
         $this->validate($path);
 
         if (! str_starts_with($path, '/')) {
-            $path = '/'.$path;
+            $path = '/' . $path;
         }
 
         return implode('/', array_map('rawurlencode', explode('/', trim($path, '/'))));

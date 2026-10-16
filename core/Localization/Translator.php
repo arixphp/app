@@ -39,7 +39,7 @@ class Translator
             ?? $key;
 
         foreach ($replace as $name => $replacement) {
-            $value = str_replace(':'.$name, (string) $replacement, $value);
+            $value = str_replace(':' . $name, (string) $replacement, $value);
         }
 
         return $value;
@@ -55,7 +55,7 @@ class Translator
     private function catalogue(string $locale): array
     {
         if (! isset($this->catalogues[$locale])) {
-            $file = $this->directory.'/'.$locale.'.php';
+            $file = $this->directory . '/' . $locale . '.php';
             $catalogue = is_file($file) ? require $file : [];
 
             if (! is_array($catalogue)) {
