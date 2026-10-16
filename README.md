@@ -9,6 +9,25 @@ Designed for traditional PHP hosting, applications built with ArixPHP can be
 deployed without SSH, Composer, Node, or frontend build steps on the server.
 ArixPHP is under active development.
 
+## Local development and deployment caching
+
+Run `arix dev` from this directory, or `php ../cli/arix dev` in the workspace.
+It manages FrankenPHP and defaults to `http://127.0.0.1:8181`; use
+`--port`, `--strict-port`, `--path`, `--frankenphp` or `--no-reload` as needed.
+The layout subscribes to local change events only when FrankenPHP supplies
+reload metadata. Starting development does not modify application files.
+
+CSS/JS entry URLs use `versioned_asset()` content hashes. Production server
+configuration requires revalidation (`Cache-Control: no-cache`) for HTML and
+mutable CSS/JS, including imports; it does not impose this on images/fonts.
+Framework files under `scripts/arix/` and `styles/arix/` are managed by the
+CLI (`css:update`, `js:update`, `frontend:migrate`): edit `scripts/app.js`,
+`styles/app.css`, `styles/theme.css` and your own components instead.
+Keep static-file validators current when deploying. Existing fresh caches,
+CDN overrides and service workers may require a URL change or purge.
+Open production tabs do not update automatically. Apache/LiteSpeed and IIS
+configuration still needs native header verification on those servers.
+
 ## Learning Arix
 
 The official documentation will be available at

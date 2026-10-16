@@ -5,3 +5,9 @@ frankenphp
 arix
 .core-backup-*
 .core-update.lock
+.frontend-backup-*
+.frontend-update.json*
+.frontend-stage-*
+.frontend.lock
+.css-update.lock
+.js-update.lock

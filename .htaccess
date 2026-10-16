@@ -11,6 +11,10 @@ DirectoryIndex index.php
 
 <IfModule mod_headers.c>
     Header always set X-Content-Type-Options "nosniff"
+
+    <FilesMatch "(?i)\.(?:php|html?|css|js)$">
+        Header always set Cache-Control "no-cache"
+    </FilesMatch>
 </IfModule>
 
 <IfModule mod_rewrite.c>
