@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Arix;
 
+use Arix\Assets\AssetServices;
 use Arix\Config\ConfigServices;
 use Arix\Config\Repository;
 use Arix\Container\Container;
@@ -11,6 +12,7 @@ use Arix\Http\Kernel;
 use Arix\HttpFoundation\Request;
 use Arix\Routing\RouteRegistry;
 use Arix\Routing\RoutingHandler;
+use Arix\Routing\UrlGenerator;
 use Arix\Support\Path;
 use Arix\Views\ViewServices;
 use Closure;
@@ -106,6 +108,10 @@ class Application
 
         $app['locale'] = $app['default_locale'] ?? null;
         $container->instance(Repository::class, new Repository(array_replace($config->get(), ['app' => $app])));
+
+        $request = $container->get(Request::class);
+        $path = $request->attributes->get('_arix_path', '/');
+        AssetServices::register($container, $this->root, new UrlGenerator((string) ($app['base_path'] ?? ''), is_string($path) ? $path : '/'));
 
         ViewServices::register($container, $this->root, $container->get(Request::class), [
             'app' => $app,

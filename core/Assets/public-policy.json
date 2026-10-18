@@ -1,0 +1,10 @@
+{
+    "format": 2,
+    "directories": {
+        "styles": ["css"],
+        "scripts": ["js"],
+        "fonts": ["woff", "woff2", "ttf", "otf"],
+        "media": ["avif", "gif", "ico", "jpg", "jpeg", "png", "webp", "mp4", "webm", "ogv"]
+    },
+    "root_files": ["favicon.ico"]
+}

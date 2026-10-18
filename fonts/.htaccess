@@ -1,0 +1,10 @@
+Options -Indexes -MultiViews -ExecCGI -FollowSymLinks +SymLinksIfOwnerMatch
+DirectoryIndex disabled
+SetHandler default-handler
+<FilesMatch "(?i)^(?![A-Za-z0-9_-]+\.(?:woff|woff2|ttf|otf)$)">
+    Require all denied
+</FilesMatch>
+AddType font/woff .woff
+AddType font/woff2 .woff2
+AddType font/ttf .ttf
+AddType font/otf .otf

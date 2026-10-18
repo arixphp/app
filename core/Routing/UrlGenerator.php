@@ -44,19 +44,6 @@ class UrlGenerator
         return $this->to($this->currentPath());
     }
 
-    public function asset(string $path): string
-    {
-        $relative = ltrim($path, '/');
-
-        if ($relative === '') {
-            throw new InvalidArgumentException('Invalid public asset path.');
-        }
-
-        $this->validate('/' . $relative);
-
-        return rtrim($this->basePath, '/') . '/' . $relative;
-    }
-
     private function suffix(string $path): string
     {
         $this->validate($path);

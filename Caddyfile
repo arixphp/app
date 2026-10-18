@@ -35,21 +35,20 @@
 
 	route {
 		# ARIX ASSET POLICY BEGIN
-		@private path_regexp arix_private `(?i)(?:^/(?:app|core|cli|tests|docs|storage)(?:/|$)|^/phpunit\.xml(?:\.dist)?$|(?:^|/)\.)`
+		@private path_regexp arix_private `(?i)(?:^/(?:app|core|cli|tests|docs|storage|assets)(?:/|$)|^/phpunit\.xml(?:\.dist)?$|(?:^|/)\.)`
 		respond @private 403
-		@fonts path_regexp arix_fonts `^/assets/fonts/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:woff|woff2|ttf|otf)$`
-		file_server @fonts {
-			pass_thru
+		@resource_method {
+			path_regexp arix_resource_method `(?i)^/(?:styles|scripts|fonts|media)(?:/|$)`
+			not method GET HEAD
 		}
-
-		@font_directory path_regexp arix_font_directory `(?i)^/assets/fonts(?:/|$)`
-		respond @font_directory 403
-		@public_files path_regexp arix_public `^/(?:styles/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:css)|scripts/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:js)|assets/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:avif|gif|ico|jpg|jpeg|png|webp|mp4|webm|ogv|woff|woff2|ttf|otf)|favicon\.ico)$`
+		header @resource_method Allow "GET, HEAD"
+		respond @resource_method 405
+		header X-Content-Type-Options nosniff
+		@public_files path_regexp arix_public `^/(?:styles/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:css)|scripts/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:js)|fonts/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:woff|woff2|ttf|otf)|media/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:avif|gif|ico|jpg|jpeg|png|webp|mp4|webm|ogv)|favicon\.ico)$`
 		file_server @public_files {
 			pass_thru
 		}
-
-		@public_directories path_regexp arix_public_directories `(?i)^/(?:styles|scripts|assets)(?:/|$)`
+		@public_directories path_regexp arix_public_directories `(?i)^/(?:styles|scripts|fonts|media)(?:/|$)`
 		respond @public_directories 403
 		@robots {
 			path /robots.txt

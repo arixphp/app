@@ -10,11 +10,11 @@
     <link rel="canonical" href="{{ url()->current() }}">
     <link rel="icon" type="image/webp" href="{{ media('arix-icon.webp') }}">
     <link rel="apple-touch-icon" href="{{ media('arix-icon.webp') }}">
-    <link rel="stylesheet" href="{{ style('styles/app.css') }}">
-    <script type="module" src="{{ scripts('scripts/app.js') }}"></script>
+    <link rel="stylesheet" href="{{ style('app.css') }}">
+    <script type="module" src="{{ script('app.js') }}"></script>
     @if (!empty($_SERVER['FRANKENPHP_HOT_RELOAD']))
         <meta name="frankenphp-hot-reload:url" content="{{ $_SERVER['FRANKENPHP_HOT_RELOAD'] }}">
-        <script type="module" src="{{ asset('scripts/arix/dev-reload.js') }}"></script>
+        <script type="module" src="{{ script('arix/dev-reload.js') }}"></script>
     @endif
 </head>
 <body>

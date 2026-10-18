@@ -1,0 +1,16 @@
+Options -Indexes -MultiViews -ExecCGI -FollowSymLinks +SymLinksIfOwnerMatch
+DirectoryIndex disabled
+SetHandler default-handler
+<FilesMatch "(?i)^(?![A-Za-z0-9_-]+\.(?:avif|gif|ico|jpg|jpeg|png|webp|mp4|webm|ogv)$)">
+    Require all denied
+</FilesMatch>
+AddType image/avif .avif
+AddType image/gif .gif
+AddType image/x-icon .ico
+AddType image/jpeg .jpg
+AddType image/jpeg .jpeg
+AddType image/png .png
+AddType image/webp .webp
+AddType video/mp4 .mp4
+AddType video/webm .webm
+AddType video/ogg .ogv

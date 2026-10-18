@@ -9,7 +9,8 @@ use Arix\Routing\RouteRegistry;
 use Arix\Routing\RouteResolver;
 use Arix\Routing\RouteUrlGenerator;
 use Arix\Routing\UrlGenerator;
-use Arix\Support\AssetVersioner;
+use Arix\Assets\AssetType;
+use Arix\Assets\AssetUrlGenerator;
 use Arix\Views\Contracts\View;
 use Arix\Views\ViewFactory;
 
@@ -64,18 +65,31 @@ if (! function_exists('config')) {
     }
 }
 
-if (! function_exists('asset')) {
-    function asset(string $path): string
+if (! function_exists('style')) {
+    function style(string $path): string
     {
-        return ContainerContext::current()->get(UrlGenerator::class)->asset($path);
+        return ContainerContext::current()->get(AssetUrlGenerator::class)->to(AssetType::Style, $path, true);
     }
 }
 
-if (! function_exists('versioned_asset')) {
-    function versioned_asset(string $path): string
+if (! function_exists('script')) {
+    function script(string $path): string
     {
+        return ContainerContext::current()->get(AssetUrlGenerator::class)->to(AssetType::Script, $path, true);
+    }
+}
 
-        return ContainerContext::current()->get(AssetVersioner::class)->asset($path);
+if (! function_exists('font')) {
+    function font(string $path, bool $versioned = false): string
+    {
+        return ContainerContext::current()->get(AssetUrlGenerator::class)->to(AssetType::Font, $path, $versioned);
+    }
+}
+
+if (! function_exists('media')) {
+    function media(string $path, bool $versioned = false): string
+    {
+        return ContainerContext::current()->get(AssetUrlGenerator::class)->to(AssetType::Media, $path, $versioned);
     }
 }
 
