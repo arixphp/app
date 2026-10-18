@@ -21,6 +21,7 @@ class ViewServicesConfig
         public readonly string $cacheVersion,
         public readonly array $locales,
         public readonly string $defaultLocale,
+        public readonly string $locale,
         public readonly string $basePath,
         public readonly string $appName,
         public readonly string $requestPath,
@@ -30,7 +31,7 @@ class ViewServicesConfig
     {
         [$app, $cache, $views, $lang] = self::sections($configuration);
 
-        [$locales, $defaultLocale, $basePath, $appName] = self::application($app);
+        [$locales, $defaultLocale, $locale, $basePath, $appName] = self::application($app);
 
         $base = self::directory($root, 'Application root is missing.');
 
@@ -40,7 +41,7 @@ class ViewServicesConfig
 
         [$cachePath, $cacheVersion] = self::cache($cache, $base);
 
-        return new self($base, $views, $lang, $cachePath, $cacheVersion, $locales, $defaultLocale, $basePath, $appName, self::requestPath($request));
+        return new self($base, $views, $lang, $cachePath, $cacheVersion, $locales, $defaultLocale, $locale, $basePath, $appName, self::requestPath($request));
     }
 
     private static function sections(array $configuration): array
@@ -65,16 +66,17 @@ class ViewServicesConfig
         $locales = $app['locales'] ?? null;
 
         $defaultLocale = $app['default_locale'] ?? null;
+        $locale = $app['locale'] ?? $defaultLocale;
 
         $basePath = $app['base_path'] ?? '';
 
-        if (! is_array($locales) || ! is_string($defaultLocale) || ! is_string($basePath)) {
+        if (! is_array($locales) || ! is_string($defaultLocale) || ! is_string($locale) || ! is_string($basePath)) {
             throw new InvalidArgumentException('View services require app.locales, app.default_locale and a string app.base_path.');
         }
 
         $name = $app['name'] ?? null;
 
-        return [$locales, $defaultLocale, $basePath, is_string($name) ? $name : 'ArixPHP'];
+        return [$locales, $defaultLocale, $locale, $basePath, is_string($name) ? $name : 'ArixPHP'];
     }
 
     private static function directory(string $path, string $missing): string

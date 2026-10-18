@@ -17,7 +17,6 @@ class AssetLocator
         $ancestor = $root;
 
         while (true) {
-
             if (is_link($ancestor)) {
                 throw new InvalidArgumentException('Linked asset roots are not allowed.');
             }
@@ -52,6 +51,7 @@ class AssetLocator
             }
 
             $file .= DIRECTORY_SEPARATOR . $segment;
+
             clearstatcache(true, $file);
 
             if (is_link($file) || realpath($file) !== $file) {

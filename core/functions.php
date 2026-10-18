@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Arix\Assets\AssetType;
+use Arix\Assets\AssetUrlGenerator;
 use Arix\Config\Repository;
 use Arix\Container\ContainerContext;
 use Arix\Localization\Translator;
@@ -9,8 +11,6 @@ use Arix\Routing\RouteRegistry;
 use Arix\Routing\RouteResolver;
 use Arix\Routing\RouteUrlGenerator;
 use Arix\Routing\UrlGenerator;
-use Arix\Assets\AssetType;
-use Arix\Assets\AssetUrlGenerator;
 use Arix\Views\Contracts\View;
 use Arix\Views\ViewFactory;
 

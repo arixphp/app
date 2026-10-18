@@ -9,7 +9,11 @@ use Arix\Support\AssetVersioner;
 
 class AssetUrlGenerator
 {
-    public function __construct(private readonly AssetPolicy $policy, private readonly UrlGenerator $urls, private readonly AssetVersioner $versioner) {}
+    public function __construct(
+        private readonly AssetPolicy $policy,
+        private readonly UrlGenerator $urls,
+        private readonly AssetVersioner $versioner
+    ) {}
 
     public function to(AssetType $type, string $path, bool $versioned): string
     {

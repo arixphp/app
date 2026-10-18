@@ -7,6 +7,7 @@ namespace Arix\Routing;
 use Arix\Constants\HttpStatusCode;
 use Arix\Container\Container;
 use Arix\Contracts\RequestHandler;
+use Arix\Http\MiddlewareDispatcher;
 use Arix\HttpFoundation\Request;
 use Arix\HttpFoundation\Response;
 use LogicException;
@@ -66,6 +67,11 @@ class RoutingHandler implements RequestHandler
 
         $request->attributes->set('_arix_route_parameters', array_keys($match->parameters));
 
-        return $this->controllers->dispatch($match->route, $request, $container);
+        return (new MiddlewareDispatcher())->dispatch(
+            $request,
+            $container,
+            $match->route->middleware,
+            fn (Request $request): Response => $this->controllers->dispatch($match->route, $request, $container),
+        );
     }
 }

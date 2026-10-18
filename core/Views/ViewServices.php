@@ -17,7 +17,7 @@ class ViewServices
     {
         $config = ViewServicesConfig::resolve($root, $request, $configuration);
 
-        $container->instance(Translator::class, new Translator($config->lang, $config->locales, $config->defaultLocale, $config->defaultLocale));
+        $container->instance(Translator::class, new Translator($config->lang, $config->locales, $config->defaultLocale, $config->locale));
 
         // Keep direct ViewServices callers compatible without owning application assets.
         if (! $container->has(AssetUrlGenerator::class)) {

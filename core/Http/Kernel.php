@@ -29,6 +29,7 @@ class Kernel
         int $maxBodyBytes = 1048576,
         string $basePath = '',
         null|Closure $logger = null,
+        private readonly array $middleware = [],
     ) {
         $this->requests = new RequestFactory($maxBodyBytes);
         $this->paths = new QueryPathValidator($basePath);
@@ -57,7 +58,14 @@ class Kernel
                     ($this->configure)($container);
                 }
 
-                return $this->handler->handle($request, $container)->prepare($request);
+                $response = (new MiddlewareDispatcher())->dispatch(
+                    $request,
+                    $container,
+                    $this->middleware,
+                    fn (Request $request): Response => $this->handler->handle($request, $container),
+                );
+
+                return $response->prepare($request);
             } catch (Throwable $exception) {
                 $method = $request->server->get('REQUEST_METHOD') === HttpMethod::HEAD->value ? HttpMethod::HEAD->value : HttpMethod::GET->value;
                 $fallback = new Request(server: ['REQUEST_METHOD' => $method], content: '');

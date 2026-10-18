@@ -12,9 +12,7 @@ class AssetVersioner
     /** @var array<string, string> */
     private array $hashes = [];
 
-    public function __construct(private readonly AssetLocator $locator)
-    {
-    }
+    public function __construct(private readonly AssetLocator $locator) {}
 
     public function hash(string $path): string
     {
