@@ -4,4 +4,4 @@ declare(strict_types=1);
 
 use Arix\Testing\TestCase;
 
-uses(TestCase::class)->in(__DIR__);
+uses(TestCase::class)->in(__DIR__ . DIRECTORY_SEPARATOR . 'Feature');
