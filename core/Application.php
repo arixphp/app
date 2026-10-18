@@ -106,7 +106,7 @@ class Application
     {
         $config = ConfigServices::register($container, $this->configDirectory);
         $container->instance(RouteRegistry::class, new RouteRegistry());
-        $container->instance(MiddlewareResolver::class, new MiddlewareResolver(Path::join($this->root, 'app', 'middlewares')));
+        $container->instance(MiddlewareResolver::class, new MiddlewareResolver(Path::join($this->root, 'app', 'middleware')));
 
         if (is_file($this->servicesFile)) {
             self::servicesClosure($this->servicesFile)($container);
