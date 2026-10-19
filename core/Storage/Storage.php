@@ -42,16 +42,8 @@ class Storage
 
         $real = realpath($root);
 
-        if ($real === false) {
-            if (! is_dir(dirname($root)) || ! mkdir($root, recursive: true)) {
-                throw new InvalidArgumentException('Storage root is missing.');
-            }
-
-            $real = realpath($root);
-
-            if ($real === false || ! is_dir($real)) {
-                throw new InvalidArgumentException('Storage root is missing.');
-            }
+        if ($real === false || ! is_dir($real)) {
+            throw new InvalidArgumentException('Storage root is missing.');
         }
 
         if (! is_readable($real) || ! is_writable($real)) {
