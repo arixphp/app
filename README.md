@@ -7,11 +7,10 @@ customize for your project.
 
 Designed for traditional PHP hosting, applications built with ArixPHP can be
 deployed without SSH, Composer, Node, or frontend build steps on the server.
-ArixPHP is under active development.
 
 ## Local development and deployment caching
 
-Run `arix dev` from this directory, or `php ../cli/arix dev` in the workspace.
+Run `arix dev` from this directory.
 It manages FrankenPHP and defaults to `http://127.0.0.1:8181`; use
 `--port`, `--strict-port`, `--path`, `--frankenphp` or `--no-reload` as needed.
 The layout subscribes to local change events only when FrankenPHP supplies
