@@ -26,7 +26,7 @@ class ViewServices
 
         $container->instance(ViewFactory::class, new ViewFactory());
 
-        $engine = new TemplateEngine($config->views, $config->cachePath, TemplateEngine::VERSION . "\0" . $config->cacheVersion);
+        $engine = new TemplateEngine($config->views, $config->cachePath, TemplateEngine::VERSION . "\0" . $config->cacheVersion, $config->templateCachePolicy);
 
         $container->instance(TemplateEngine::class, $engine);
         $container->instance(ErrorViewRenderer::class, new ErrorViewRenderer($engine, $config->appName));

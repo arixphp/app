@@ -15,10 +15,13 @@ class TemplateEngine
 
     private array $active = [];
 
+    private bool $renderingBlade = false;
+
     public function __construct(
         private readonly string $directory,
         private readonly string $cacheDirectory,
         private readonly string $version = self::VERSION,
+        private readonly TemplateCachePolicy|null $cachePolicy = null,
     ) {}
 
     public function render(string $name, array $data = [], array $sections = []): string
@@ -59,6 +62,27 @@ class TemplateEngine
     }
 
     private function renderBlade(TemplateResolver $resolver, View $view, array $sections): string
+    {
+        if ($this->renderingBlade) {
+
+            return $this->executeBlade($resolver, $view, $sections);
+        }
+
+        $maintenance = new TemplateCacheMaintenance($this->cacheDirectory, $this->cachePolicy ?? new TemplateCachePolicy());
+
+        return $maintenance->run(function () use ($resolver, $view, $sections): string {
+            $this->renderingBlade = true;
+
+            try {
+
+                return $this->executeBlade($resolver, $view, $sections);
+            } finally {
+                $this->renderingBlade = false;
+            }
+        });
+    }
+
+    private function executeBlade(TemplateResolver $resolver, View $view, array $sections): string
     {
         $adapter = new BladeAdapter($resolver, new CompiledTemplateCache($this->cacheDirectory, $this->version));
         $adapter->setNativeRunner(fn (string $template, array $data, array $incoming): string => $this->renderNative($template, $data, $incoming));

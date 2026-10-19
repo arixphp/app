@@ -7,7 +7,7 @@
     ],
     "files": {
         ".htaccess": "b839261c1ee52349560b726218f0bc9cb1afee95e07e9d50f95919d5e8e6cdf2",
-        "Application.php": "4b438af0e5dc73f5af11839b0d625afc0b21dd6b463b2e31d9141598769fb773",
+        "Application.php": "3ea4c8b2d9cb732969cc560218d86bb12f4dd3787e9f792d509efc08ea452444",
         "ApplicationBuilder.php": "71fad14f8ed4ece4f0d7c8df49e90e035819c7b265677c15fd20809be073d56b",
         "Assets/AssetLocator.php": "084b6dbaf7d5acacb7ebb3d5864a2dbe108898c3f2c7cfb7634ce919b63c6609",
         "Assets/AssetPolicy.php": "4f4fc036d0d0c0404cb1d4addd497cdf555a3ab6ae66e690da53f66b7973de57",
@@ -206,16 +206,18 @@
         "Views/Contracts/View.php": "9a4f91c39cefe19932409a795cdea285acdba4fa2e08aca076e5eca18513ed43",
         "Views/ErrorViewRenderer.php": "e170615f27ec1fbf284b9c29f4d0085a4528a730b16f75e7685c122aa42a2d1f",
         "Views/NativeRenderContext.php": "671cc896e33e052723b6709e9d4c30e8439ebe30471b2f3aad19a817afb857e1",
-        "Views/TemplateEngine.php": "ca05fc779c90efa13ace07e655442c71daf45982f2ec49f8f16c1d6fd6433c86",
+        "Views/TemplateCacheMaintenance.php": "744bff270515efb5653ef6ef5edf679a2052150ba6a7099293562f4e3478318d",
+        "Views/TemplateCachePolicy.php": "1d373208024c9eb7e86ff74cda81ca830f27fabaad00ecae1bf41f15becafb46",
+        "Views/TemplateEngine.php": "599a5b6db33073e90c9f51b85e82098ea0804196baad994c20e6016a0b19b8a0",
         "Views/TemplateResolver.php": "7a16d223a5a014ad82629c02bb64e9820fe04242651406254e61e4c6411c5c51",
         "Views/View.php": "4f2c2c38d5d9c1af92d79dc0f87e89710e0d32a1ca9ed123a763e8b5eabee195",
         "Views/ViewFactory.php": "e4a19080279d546b193495395ad0140d225a883aefbc2d8fc0006f57e3bd0b35",
-        "Views/ViewServices.php": "00095c46c900fbba34737460f106861987c074d4df19cdc19486d231f8cb471f",
-        "Views/ViewServicesConfig.php": "cbade1e46f34851a2c01e5263df039a33472822bf51a2ad259791016cdc63be1",
+        "Views/ViewServices.php": "3a631e56562153005aee7231145a9eddf41be731ceacbf4d7245fb0322e07800",
+        "Views/ViewServicesConfig.php": "0b2b1adf0e934383367af193c41661ab4432c6715b57ffe88f40eff6a0bb9aae",
         "autoload.php": "f523af7a543bf9b4020723e4399787291b828f9df65857d8e9578e40eb600495",
         "functions.php": "602fd28e673b7876e517e129dfafa39c538c0003d70b1f6ea27f0caf6e5ac0d1",
         "imports.json": "5ce7d1ce4ff28e9348ba4eb6ca6d4ead660cc1506be839088f9a86de5dccfbf0",
         "stubs/error.html": "e83a401a6856aa86eb6483c6a31249b57d945594228ec9c5a594f68c67b09fe1"
     },
-    "id": "19d48157fe7fce7038f620b00bf057e8e9532fb9dc5c49b51aec94394c870db5"
+    "id": "2a8d39d1c6867765e2a71f70e12f2a9a4ac8364bf3a613825c6027c8a862ba1e"
 }

@@ -25,6 +25,7 @@ class ViewServicesConfig
         public readonly string $basePath,
         public readonly string $appName,
         public readonly string $requestPath,
+        public readonly TemplateCachePolicy $templateCachePolicy,
     ) {}
 
     public static function resolve(string $root, Request $request, array $configuration): self
@@ -41,7 +42,7 @@ class ViewServicesConfig
 
         [$cachePath, $cacheVersion] = self::cache($cache, $base);
 
-        return new self($base, $views, $lang, $cachePath, $cacheVersion, $locales, $defaultLocale, $locale, $basePath, $appName, self::requestPath($request));
+        return new self($base, $views, $lang, $cachePath, $cacheVersion, $locales, $defaultLocale, $locale, $basePath, $appName, self::requestPath($request), TemplateCachePolicy::fromConfiguration($cache));
     }
 
     private static function sections(array $configuration): array

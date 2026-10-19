@@ -22,6 +22,7 @@ use Arix\Views\ViewServices;
 use Closure;
 use RuntimeException;
 
+use function array_key_exists;
 use function is_array;
 use function is_string;
 
@@ -147,10 +148,16 @@ class Application
         $request = $container->get(Request::class);
         $path = $request->attributes->get('_arix_path', '/');
         AssetServices::register($container, $this->root, new UrlGenerator((string) ($app['base_path'] ?? ''), is_string($path) ? $path : '/'));
+        $cache = ['path' => $cachePath, 'version' => $config->get('cache.version', '1')];
+        $cacheConfiguration = $config->get('cache', []);
+
+        if (is_array($cacheConfiguration) && array_key_exists('templates', $cacheConfiguration)) {
+            $cache['templates'] = $cacheConfiguration['templates'];
+        }
 
         ViewServices::register($container, $this->root, $container->get(Request::class), [
             'app' => $app,
-            'cache' => ['path' => $cachePath, 'version' => $config->get('cache.version', '1')],
+            'cache' => $cache,
             'views' => $this->viewsDirectory,
             'lang' => $this->languageDirectory,
         ]);
