@@ -1,0 +1,9 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Arix\Http\Client;
+
+use RuntimeException;
+
+class HttpClientException extends RuntimeException {}
