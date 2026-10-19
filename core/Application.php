@@ -7,6 +7,7 @@ namespace Arix;
 use Arix\Assets\AssetServices;
 use Arix\Config\ConfigServices;
 use Arix\Config\Repository;
+use Arix\Constants\HttpMethod;
 use Arix\Container\Container;
 use Arix\Contracts\RequestHandler;
 use Arix\Http\Kernel;
@@ -16,6 +17,7 @@ use Arix\HttpFoundation\Response;
 use Arix\Routing\RouteRegistry;
 use Arix\Routing\RoutingHandler;
 use Arix\Routing\UrlGenerator;
+use Arix\Scheduling\Schedule;
 use Arix\Storage\StorageServices;
 use Arix\Support\Path;
 use Arix\Views\ViewServices;
@@ -104,6 +106,35 @@ class Application
         );
     }
 
+    public function registerConsole(Container $container): void
+    {
+        $container->instance(Request::class, new Request(server: ['REQUEST_METHOD' => HttpMethod::GET->value], content: ''));
+
+        $this->register($container);
+        $this->registerPresentation($container, routes: false);
+    }
+
+    public function schedules(Schedule $schedule): void
+    {
+        $file = Path::join($this->root, 'app', 'schedules.php');
+
+        if (! is_file($file)) {
+            return;
+        }
+
+        if (is_link($file)) {
+            throw new RuntimeException("Application schedules are linked: {$file}");
+        }
+
+        $register = require $file;
+
+        if (! $register instanceof Closure) {
+            throw new RuntimeException('Application schedules must return a registration closure.');
+        }
+
+        $register($schedule);
+    }
+
     private function register(Container $container): void
     {
         $config = ConfigServices::register($container, $this->configDirectory);
@@ -123,7 +154,7 @@ class Application
         $container->get(Request::class)->setDefaultLocale($app['default_locale']);
     }
 
-    private function registerPresentation(Container $container): void
+    private function registerPresentation(Container $container, bool $routes = true): void
     {
         $config = $container->get(Repository::class);
         $cachePath = $config->get('cache.path', 'storage/cache');
@@ -164,15 +195,17 @@ class Application
 
         StorageServices::register($container, Path::join($this->root, 'storage', 'app'));
 
-        if (is_link($this->routesFile)) {
-            throw new RuntimeException("Application routes are linked: {$this->routesFile}");
-        }
+        if ($routes) {
+            if (is_link($this->routesFile)) {
+                throw new RuntimeException("Application routes are linked: {$this->routesFile}");
+            }
 
-        if (! is_file($this->routesFile) || ! is_readable($this->routesFile)) {
-            throw new RuntimeException("Application routes are missing: {$this->routesFile}");
-        }
+            if (! is_file($this->routesFile) || ! is_readable($this->routesFile)) {
+                throw new RuntimeException("Application routes are missing: {$this->routesFile}");
+            }
 
-        require $this->routesFile;
+            require $this->routesFile;
+        }
     }
 
     private static function servicesClosure(string $file): Closure

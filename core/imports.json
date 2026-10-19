@@ -16,6 +16,11 @@
             "version": "5.0",
             "destination": "BladeOne",
             "namespace": "Arix\\BladeOne"
+        },
+        "dragonmantank/cron-expression": {
+            "version": "v3.6.0",
+            "destination": "Cron",
+            "namespace": "Arix\\Cron"
         }
     },
     "files": {
@@ -24,6 +29,17 @@
         "BladeOne/BladeOneCacheRedis.php": "1b27912eecddb97042b05f9d2192c3e578f3a68069982c080f446dddfe72ada7",
         "BladeOne/BladeOneCustom.php": "f030d8859178a04909bc79b61e66943b613b8b2642489a950154e5a9b206062d",
         "BladeOne/LICENSE": "717b3effa39b4f8a73093fa222108d7e2bf9206c71262d4ba108aad55e754e22",
+        "Cron/AbstractField.php": "cbe0180643ee7c1957f659666583519abaaf9d51fb6ede627ab549e8d3ad8412",
+        "Cron/CronExpression.php": "f7d6bea1fff6c013257b1f42dbde05ca68c0bcc7530c71c34326f582117b9057",
+        "Cron/DayOfMonthField.php": "f374e9bfc969543c72672ba552f533292a2e0f159336132d70bc3ad853ac60cb",
+        "Cron/DayOfWeekField.php": "650aa70fea0eae5b31f06b4b0c8fe473de4619114c7cfd886d1536ff55646b38",
+        "Cron/FieldFactory.php": "e6a819471592dca65f7c162b2747f03bacd3759e03c68a55c3fcb7a11ddb1beb",
+        "Cron/FieldFactoryInterface.php": "973c90560c77e2f68d88e1d83d644953e8bbe1684c6fdac242b27d6d02a4eba9",
+        "Cron/FieldInterface.php": "8de7b263cf322ff3d5cfd753d9ef1115786cd849f0d99e48a59114aa680052e0",
+        "Cron/HoursField.php": "7391647bc8e2c3838306d937bbcacf4d8835c6719e37868406d2755cf8c5c653",
+        "Cron/LICENSE": "adbbf6c8829fa66f18592055b0e3abd5da8f721c4d91db0d2251c46f7db1edc5",
+        "Cron/MinutesField.php": "c8df33a4b5bb2130832e5a19a1a329e7cebbf34004ed77c1cd2956aaceb3eebd",
+        "Cron/MonthField.php": "0a8f60989dcd1b81731663a9a0857b9e6d2a9052a300de9385850f6c1ad7866a",
         "FastRoute/BadRouteException.php": "886568ac725759556a403996dab610eb23576dfec5aadd20ae4ce3cb1ad83c94",
         "FastRoute/DataGenerator.php": "7311c6be12758a4a334672237f65d8e72a280ee36b912161e085734534a15ea4",
         "FastRoute/DataGenerator/CharCountBased.php": "483396295fa482b16c53e50b027aebc573d9a1a4f1fc6fd8401a8ff28916932d",
