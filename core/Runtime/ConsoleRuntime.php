@@ -21,9 +21,9 @@ use Throwable;
 use function fwrite;
 use function implode;
 use function is_string;
+use function sprintf;
 use function str_contains;
 use function str_starts_with;
-use function sprintf;
 
 class ConsoleRuntime
 {
@@ -59,6 +59,7 @@ class ConsoleRuntime
         $report = (new ScheduleRunner($schedule, $lock, $grace))->run($now);
 
         $this->write($report, $now);
+        $this->reportFailures($report);
         $this->log($report, $now, $applicationRoot, $config->get('schedule.log', 'storage/logs/cron.log'));
 
         return $report->failed() ? 1 : 0;
@@ -73,6 +74,13 @@ class ConsoleRuntime
         ];
 
         fwrite(STDOUT, implode(PHP_EOL, $lines) . PHP_EOL);
+    }
+
+    private function reportFailures(ScheduleReport $report): void
+    {
+        foreach ($report->failureLines() as $line) {
+            fwrite(STDERR, $line . PHP_EOL);
+        }
     }
 
     private function log(ScheduleReport $report, DateTimeImmutable $now, string $applicationRoot, mixed $path): void

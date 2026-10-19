@@ -51,9 +51,23 @@ class ScheduleReport
                 continue;
             }
 
-            $lines[] = $result->status === TaskStatus::Completed
-                ? sprintf('  %-4s %-20s%s', 'OK', $result->name, sprintf('completed in %ss', number_format($result->duration, 2, '.', '')))
-                : sprintf('  %-4s %-20s%s', 'FAIL', $result->name, $result->message === null ? 'failed' : sprintf('failed: %s', $result->message));
+            $lines[] = $this->line($result);
+        }
+
+        return $lines;
+    }
+
+    /** @return list<string> */
+    public function failureLines(): array
+    {
+        $lines = [];
+
+        foreach ($this->results as $result) {
+            if ($result->status !== TaskStatus::Failed) {
+                continue;
+            }
+
+            $lines[] = $this->line($result);
         }
 
         return $lines;
@@ -85,6 +99,15 @@ class ScheduleReport
         }
 
         return sprintf('%d events: %s', $count, implode(', ', $parts));
+    }
+
+    private function line(TaskResult $result): string
+    {
+        if ($result->status === TaskStatus::Completed) {
+            return sprintf('  %-4s %-20s%s', 'OK', $result->name, sprintf('completed in %ss', number_format($result->duration, 2, '.', '')));
+        }
+
+        return sprintf('  %-4s %-20s%s', 'FAIL', $result->name, $result->message === null ? 'failed' : sprintf('failed: %s', $result->message));
     }
 
     private function count(TaskStatus $status): int
