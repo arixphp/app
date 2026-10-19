@@ -132,7 +132,7 @@ class Application
             throw new RuntimeException('Application cache path is missing.');
         }
 
-        if (! str_starts_with($cachePath, DIRECTORY_SEPARATOR)) {
+        if (! Path::isAbsolute($cachePath)) {
             $cachePath = Path::join($this->root, $cachePath);
         }
 

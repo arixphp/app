@@ -7,7 +7,7 @@
     ],
     "files": {
         ".htaccess": "b839261c1ee52349560b726218f0bc9cb1afee95e07e9d50f95919d5e8e6cdf2",
-        "Application.php": "3ea4c8b2d9cb732969cc560218d86bb12f4dd3787e9f792d509efc08ea452444",
+        "Application.php": "c5d3a494af71a27228a28bfaa985de347a69c75f4f2530f0ec2f0c897ef99621",
         "ApplicationBuilder.php": "71fad14f8ed4ece4f0d7c8df49e90e035819c7b265677c15fd20809be073d56b",
         "Assets/AssetLocator.php": "084b6dbaf7d5acacb7ebb3d5864a2dbe108898c3f2c7cfb7634ce919b63c6609",
         "Assets/AssetPolicy.php": "4f4fc036d0d0c0404cb1d4addd497cdf555a3ab6ae66e690da53f66b7973de57",
@@ -197,7 +197,7 @@
         "Support/Arr.php": "fb9cdfce707d3ea18351e1d3f18a27fb7a2073cfbfda4315f82218c94e029250",
         "Support/AssetVersioner.php": "92887898eed80ffb00537ab6756453bbb565f41c82ff1afccb6341f99206dda9",
         "Support/ForbidInstance.php": "daecb9700598e92ea9df2ae6530a0b82075350dfb7e4b2cece803ee8cba15c3c",
-        "Support/Path.php": "d3970bf5b73de2993189451f5189888fd3f328c2b361c319fce68f749035c905",
+        "Support/Path.php": "2cdcebc0397e105c43aabc8edcfce7366f5a8d5b53ba4148a415df90d38f4469",
         "Support/Str.php": "b24962aef939a7a5b4a6b1cc90dfa5afc3f7bbc4d2ac896e9847e9f693a1ac39",
         "Testing/TestCase.php": "7eeb0adff3254980ca8d7ff1ba3bf3aadfa780751bf8616e5eaae4994d7fb400",
         "Testing/TestResponse.php": "22f331cf596c3a936ef48ebd71fc8d05327519e41142f18d4fa44532bac26924",
@@ -219,5 +219,5 @@
         "imports.json": "5ce7d1ce4ff28e9348ba4eb6ca6d4ead660cc1506be839088f9a86de5dccfbf0",
         "stubs/error.html": "e83a401a6856aa86eb6483c6a31249b57d945594228ec9c5a594f68c67b09fe1"
     },
-    "id": "f6f33c8f29cf4d2ada962455b0bcc89f09653de74e49b3b28c3c06ed55a023a5"
+    "id": "7a82fb317ede71b454528c01e06dd91647ed724c5077d7481159159209d2cab9"
 }
