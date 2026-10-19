@@ -11,6 +11,7 @@ use Arix\Routing\RouteRegistry;
 use Arix\Routing\RouteResolver;
 use Arix\Routing\RouteUrlGenerator;
 use Arix\Routing\UrlGenerator;
+use Arix\Storage\Storage;
 use Arix\Views\Contracts\View;
 use Arix\Views\ViewFactory;
 
@@ -111,6 +112,13 @@ if (! function_exists('route')) {
         }
 
         return (new RouteUrlGenerator($registry, $urls))->to($name, $params, $absolute);
+    }
+}
+
+if (! function_exists('storage')) {
+    function storage(): Storage
+    {
+        return ContainerContext::current()->get(Storage::class);
     }
 }
 

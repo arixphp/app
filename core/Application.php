@@ -16,6 +16,7 @@ use Arix\HttpFoundation\Response;
 use Arix\Routing\RouteRegistry;
 use Arix\Routing\RoutingHandler;
 use Arix\Routing\UrlGenerator;
+use Arix\Storage\StorageServices;
 use Arix\Support\Path;
 use Arix\Views\ViewServices;
 use Closure;
@@ -153,6 +154,8 @@ class Application
             'views' => $this->viewsDirectory,
             'lang' => $this->languageDirectory,
         ]);
+
+        StorageServices::register($container, Path::join($this->root, 'storage', 'app'));
 
         if (is_link($this->routesFile)) {
             throw new RuntimeException("Application routes are linked: {$this->routesFile}");

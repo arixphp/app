@@ -7,7 +7,7 @@
     ],
     "files": {
         ".htaccess": "b839261c1ee52349560b726218f0bc9cb1afee95e07e9d50f95919d5e8e6cdf2",
-        "Application.php": "02a6d0a44a0e8533a3630f9fe29c979387a7c26cedb6f83022a402e9c189b55a",
+        "Application.php": "4b438af0e5dc73f5af11839b0d625afc0b21dd6b463b2e31d9141598769fb773",
         "ApplicationBuilder.php": "71fad14f8ed4ece4f0d7c8df49e90e035819c7b265677c15fd20809be073d56b",
         "Assets/AssetLocator.php": "084b6dbaf7d5acacb7ebb3d5864a2dbe108898c3f2c7cfb7634ce919b63c6609",
         "Assets/AssetPolicy.php": "4f4fc036d0d0c0404cb1d4addd497cdf555a3ab6ae66e690da53f66b7973de57",
@@ -34,6 +34,7 @@
         "Contracts/Middleware.php": "b63cdf367b6e784b768dcde20d7d232f3278e0550757c2b7ead751c1736de23d",
         "Contracts/RequestHandler.php": "062d022ba57ca720b95f6c686ad6ded06787db77a8c327bf90f1dccbb869e9c1",
         "Facades/Route.php": "c62e2f0580fded8ad0ec86d5bd2f65cd259137a6e824c6c359264aac37115057",
+        "Facades/Storage.php": "4c7c11ccd64dde9007f82a5daf1489b480ef105e7dc79966b9a6e3e5872f2640",
         "FastRoute/BadRouteException.php": "886568ac725759556a403996dab610eb23576dfec5aadd20ae4ce3cb1ad83c94",
         "FastRoute/DataGenerator.php": "7311c6be12758a4a334672237f65d8e72a280ee36b912161e085734534a15ea4",
         "FastRoute/DataGenerator/CharCountBased.php": "483396295fa482b16c53e50b027aebc573d9a1a4f1fc6fd8401a8ff28916932d",
@@ -191,6 +192,8 @@
         "Routing/UrlGenerator.php": "8c8a6f6631e4179ae737c531c2f7d0b86af0cbbcaaa5af63ca410513ce7cb58c",
         "Runtime/Facade.php": "d4a1a537eca50f2cd7bf38e808f04ca2fc4a753b666a8427e6530deb3e926c34",
         "Runtime/HttpRuntime.php": "8c47344c3524ddabc9aab6ae1e08f9c1bf549be839ff2831f5a3e18ae462968a",
+        "Storage/Storage.php": "6fcdc8f5072d1116227a256e40b05844be7657070bd6cc1c1fa1c949b432aeaf",
+        "Storage/StorageServices.php": "ce5afc1021547164eff73bdef6aaab6bf530cddbfc31498a3e46c2d7f8935f0f",
         "Support/Arr.php": "fb9cdfce707d3ea18351e1d3f18a27fb7a2073cfbfda4315f82218c94e029250",
         "Support/AssetVersioner.php": "92887898eed80ffb00537ab6756453bbb565f41c82ff1afccb6341f99206dda9",
         "Support/ForbidInstance.php": "daecb9700598e92ea9df2ae6530a0b82075350dfb7e4b2cece803ee8cba15c3c",
@@ -210,9 +213,9 @@
         "Views/ViewServices.php": "00095c46c900fbba34737460f106861987c074d4df19cdc19486d231f8cb471f",
         "Views/ViewServicesConfig.php": "cbade1e46f34851a2c01e5263df039a33472822bf51a2ad259791016cdc63be1",
         "autoload.php": "f523af7a543bf9b4020723e4399787291b828f9df65857d8e9578e40eb600495",
-        "functions.php": "916d5e17812f2bf08f7a466b302b97bf87037bf85ba8e22d9c192aa19868d852",
+        "functions.php": "602fd28e673b7876e517e129dfafa39c538c0003d70b1f6ea27f0caf6e5ac0d1",
         "imports.json": "5ce7d1ce4ff28e9348ba4eb6ca6d4ead660cc1506be839088f9a86de5dccfbf0",
         "stubs/error.html": "e83a401a6856aa86eb6483c6a31249b57d945594228ec9c5a594f68c67b09fe1"
     },
-    "id": "eb1f8383e33f652c3310506d9dd8e0bea65555193b8d6f463c2e1fcf921039ea"
+    "id": "19d48157fe7fce7038f620b00bf057e8e9532fb9dc5c49b51aec94394c870db5"
 }
