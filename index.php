@@ -12,4 +12,7 @@ $debug = match (strtolower(trim((string) getenv('APP_DEBUG')))) {
 
 require_once __DIR__ . '/core/autoload.php';
 
-exit((new HttpRuntime($debug))->run(static fn (): Kernel => require __DIR__ . '/app/bootstrap.php'));
+$status = new HttpRuntime($debug)
+    ->run(static fn (): Kernel => require __DIR__ . '/app/bootstrap.php');
+
+exit($status);
