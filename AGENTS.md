@@ -131,9 +131,9 @@ applications created with `arix new`, which receive the document above from the 
   `core/Views/TemplateCompiler.php` (`VERSION`); without the bump, existing sites keep serving
   stale cached content.
 - CI: `.github/workflows/ci.yml` runs on pushes and pull requests targeting `main` and
-  `develop`. It runs on Ubuntu only, downloads the latest published Arix CLI for Linux x64,
-  verifies its SHA-256 checksum against the release's `SHA256SUMS`, then runs `arix tests` and
-  `arix format --test` with that executable. It installs nothing in the application and needs
-  no secret. The resolved CLI tag appears in the job log. The formatting step fails when the
-  published CLI does not ship `format --test`, and says so; publish a CLI release that includes
-  it. Test configuration is `phpunit.xml`, with bootstrap `tests/autoload.php`.
+  `develop`. It runs on Ubuntu only, installs the published Arix CLI with Homebrew
+  (`brew install arixphp/tap/arix`), then runs `arix tests` and `arix format --test` with that
+  executable. It installs nothing in the application and needs no secret. The installed CLI
+  version appears in the job log. The formatting step runs `arix format --test` directly and
+  preserves the CLI output and exit status. Test configuration is `phpunit.xml`, with bootstrap
+  `tests/autoload.php`.

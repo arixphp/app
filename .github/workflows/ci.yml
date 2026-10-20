@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Arix tests and format (Ubuntu)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Install Arix CLI
+        shell: bash
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: '1'
+          HOMEBREW_NO_INSTALL_CLEANUP: '1'
+          HOMEBREW_NO_ANALYTICS: '1'
+        run: |
+          set -euo pipefail
+
+          # Homebrew ships with the Ubuntu runner image but is not on PATH.
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+          brew tap arixphp/tap
+          brew install arixphp/tap/arix
+          echo "$(brew --prefix)/bin" >> "${GITHUB_PATH}"
+
+          version="$(arix --version | tr -d '\r' | tail -n 1)"
+
+          if [ -z "${version}" ]; then
+            echo "The installed Arix CLI did not report a version." >&2
+            exit 1
+          fi
+
+          echo "Installed ${version}."
+          echo "Arix CLI: ${version}" >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Show CLI version
+        run: arix --version
+
+      - name: Run application tests
+        run: arix tests
+
+      - name: Check application formatting
+        run: arix format --test
