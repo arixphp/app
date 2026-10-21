@@ -7,6 +7,7 @@ namespace Arix\Routing;
 use Arix\Container\Container;
 use Arix\HttpFoundation\Request;
 use Arix\HttpFoundation\Response;
+use Arix\Support\Path;
 use Arix\Views\Contracts\View as ViewContract;
 use Arix\Views\TemplateEngine;
 use ReflectionClass;
@@ -131,7 +132,30 @@ class ControllerDispatcher
         }
 
         // Check ancestors before realpath can hide a linked directory.
-        $ancestor = $this->directory;
+        $this->assertUnlinkedAncestors($this->directory);
+
+        $base = realpath($this->directory);
+
+        if ($base === false || ! is_dir($base)) {
+            throw new RuntimeException('Controller directory is missing.');
+        }
+
+        if (! Path::hasExactCase($this->directory)) {
+            throw new RuntimeException('Controller directory must match its configured case exactly.');
+        }
+
+        $file = $this->classFile($base, explode('\\', $matches[1]));
+
+        if ($file === false) {
+            throw new RuntimeException('Controller file is missing or outside its application.');
+        }
+
+        return $file;
+    }
+
+    private function assertUnlinkedAncestors(string $directory): void
+    {
+        $ancestor = $directory;
 
         while (true) {
             if (is_link($ancestor)) {
@@ -141,20 +165,17 @@ class ControllerDispatcher
             $parent = dirname($ancestor);
 
             if ($parent === $ancestor) {
-                break;
+                return;
             }
 
             $ancestor = $parent;
         }
+    }
 
-        $base = realpath($this->directory);
-
-        if ($base === false || ! is_dir($base)) {
-            throw new RuntimeException('Controller directory is missing.');
-        }
-
+    /** @param list<string> $segments */
+    private function classFile(string $base, array $segments): string|false
+    {
         $path = $base;
-        $segments = explode('\\', $matches[1]);
         $segments[array_key_last($segments)] .= '.php';
 
         foreach ($segments as $segment) {
@@ -172,7 +193,7 @@ class ControllerDispatcher
         $file = realpath($path);
 
         if ($file === false || ! is_file($file) || ! str_starts_with($file, $base . DIRECTORY_SEPARATOR)) {
-            throw new RuntimeException('Controller file is missing or outside its application.');
+            return false;
         }
 
         return $file;

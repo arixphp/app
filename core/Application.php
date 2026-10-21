@@ -19,6 +19,7 @@ use Arix\Routing\RoutingHandler;
 use Arix\Routing\UrlGenerator;
 use Arix\Scheduling\Schedule;
 use Arix\Storage\StorageServices;
+use Arix\Support\ApplicationAutoloader;
 use Arix\Support\Path;
 use Arix\Views\ViewServices;
 use Closure;
@@ -44,6 +45,12 @@ class Application
     public static function create(string $root): self
     {
         $base = self::canonicalDirectory($root, 'Application root');
+
+        return ApplicationAutoloader::run($base, static fn (): self => self::load($base));
+    }
+
+    private static function load(string $base): self
+    {
         $configDirectory = Path::join($base, 'app', 'config');
         $routesFile = Path::join($base, 'app', 'routes.php');
 
@@ -65,7 +72,7 @@ class Application
         return new self(
             $base,
             $configDirectory,
-            Path::join($base, 'app', 'controllers'),
+            Path::join($base, 'app', 'Controllers'),
             $servicesFile,
             $routesFile,
             Path::join($base, 'app', 'views'),
@@ -103,18 +110,28 @@ class Application
             maxBodyBytes: (int) $this->defaults->get('app.max_body_bytes', 1048576),
             basePath: (string) $this->defaults->get('app.base_path', ''),
             middleware: $middleware,
+            applicationRoot: $this->root,
         );
     }
 
     public function registerConsole(Container $container): void
     {
-        $container->instance(Request::class, new Request(server: ['REQUEST_METHOD' => HttpMethod::GET->value], content: ''));
+        ApplicationAutoloader::run($this->root, function () use ($container): void {
+            $container->instance(Request::class, new Request(server: ['REQUEST_METHOD' => HttpMethod::GET->value], content: ''));
 
-        $this->register($container);
-        $this->registerPresentation($container, routes: false);
+            $this->register($container);
+            $this->registerPresentation($container, routes: false);
+        });
     }
 
     public function schedules(Schedule $schedule): void
+    {
+        ApplicationAutoloader::run($this->root, function () use ($schedule): void {
+            $this->registerSchedules($schedule);
+        });
+    }
+
+    private function registerSchedules(Schedule $schedule): void
     {
         $file = Path::join($this->root, 'app', 'schedules.php');
 
@@ -139,7 +156,7 @@ class Application
     {
         $config = ConfigServices::register($container, $this->configDirectory);
         $container->instance(RouteRegistry::class, new RouteRegistry());
-        $container->instance(MiddlewareResolver::class, new MiddlewareResolver(Path::join($this->root, 'app', 'middleware')));
+        $container->instance(MiddlewareResolver::class, new MiddlewareResolver(Path::join($this->root, 'app', 'Middleware')));
 
         if (is_file($this->servicesFile)) {
             self::servicesClosure($this->servicesFile)($container);

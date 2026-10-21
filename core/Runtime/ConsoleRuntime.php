@@ -14,6 +14,7 @@ use Arix\Scheduling\ScheduleLogger;
 use Arix\Scheduling\ScheduleReport;
 use Arix\Scheduling\ScheduleRunner;
 use Arix\Storage\Storage;
+use Arix\Support\ApplicationAutoloader;
 use DateTimeImmutable;
 use DateTimeZone;
 use Throwable;
@@ -33,7 +34,7 @@ class ConsoleRuntime
 
         return ContainerContext::run($container, function () use ($applicationRoot, $container): int {
             try {
-                return $this->execute($applicationRoot, $container);
+                return ApplicationAutoloader::run($applicationRoot, fn (): int => $this->execute($applicationRoot, $container));
             } catch (Throwable $exception) {
                 fwrite(STDERR, 'Arix scheduler failed: ' . $exception->getMessage() . PHP_EOL);
 

@@ -6,6 +6,7 @@ namespace Arix\Http;
 
 use Arix\Container\Container;
 use Arix\Contracts\Middleware;
+use Arix\Support\Path;
 use ReflectionClass;
 use RuntimeException;
 
@@ -61,6 +62,14 @@ class MiddlewareResolver
 
         if (! preg_match('/^[A-Za-z_][A-Za-z0-9_]*(?:\\\\[A-Za-z_][A-Za-z0-9_]*)*$/D', $relative)) {
             throw new RuntimeException('Invalid middleware class.');
+        }
+
+        if (! is_dir($this->directory)) {
+            throw new RuntimeException('Middleware file is missing, linked, or has incorrect case.');
+        }
+
+        if (! Path::hasExactCase($this->directory)) {
+            throw new RuntimeException('Middleware directory must match its configured case exactly.');
         }
 
         $path = $this->directory;

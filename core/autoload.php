@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use Arix\Support\ApplicationAutoloader;
 
 if (PHP_VERSION_ID < 80401) {
     throw new RuntimeException('Arix core requires PHP >= 8.4.1.');
@@ -30,3 +31,5 @@ spl_autoload_register(static function (string $class): void {
 
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . DIRECTORY_SEPARATOR . 'FastRoute' . DIRECTORY_SEPARATOR . 'functions.php';
+
+ApplicationAutoloader::register(dirname(__DIR__));
