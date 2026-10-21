@@ -17,6 +17,7 @@ use function curl_exec;
 use function curl_getinfo;
 use function curl_init;
 use function curl_setopt_array;
+use function defined;
 use function explode;
 use function filter_var;
 use function http_build_query;
@@ -32,7 +33,6 @@ use function str_starts_with;
 use function strlen;
 use function strtolower;
 use function trim;
-use function defined;
 
 class Http
 {

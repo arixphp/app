@@ -67,7 +67,7 @@
         "FastRoute/RouteParser/Std.php": "2d349cd779da7a36db4c7e1a2c68ce1821253c09a810785b0c13e1bd0771f261",
         "FastRoute/functions.php": "6b55310ab67a6d4e5bae9583dc7daa27464a765221331c24ebab17a30d6c4fc7",
         "Http/Client/HostPolicy.php": "4504b1bc2f883678205923b91671fc062b0455c7e0ce4a4929915f466ca2b56b",
-        "Http/Client/Http.php": "b8f791b208ba009bdeb45d4e672f07d66c03793c6243c923a6121e870d4e30d0",
+        "Http/Client/Http.php": "0464e0ff1e4fa5a3521bfb0d580218c3df212a6d0a1cd6eedeca62442833487c",
         "Http/Client/HttpClientException.php": "df05bf3893b8dbb0db987491a8e61713529919252b9f01e4eae0bd4eae72f93a",
         "Http/Client/Response.php": "c2339616cba788d287769191b74292f0a05f56c5dd678b1c6855d7f905903e26",
         "Http/ErrorPageRenderer.php": "475a6d0e1f086e1d124db7c633f28e2a29e436077627f19c62382718938deae1",
@@ -249,5 +249,5 @@
         "imports.json": "8c2ad9a1aed5b2c8445e6d5b6ff8e61db9fb5ea15a56a26a94b3cc2a4dc19a36",
         "stubs/error.html": "e83a401a6856aa86eb6483c6a31249b57d945594228ec9c5a594f68c67b09fe1"
     },
-    "id": "c766319f27001dc7fbfa4741265ed66479b2754933780f6766acb0e3d1f0d44a"
+    "id": "a6edc255895e8337e326286aad7a02d5403509d2d66b6093b0d8d2fca3d0a994"
 }
