@@ -10,6 +10,8 @@ use Arix\HttpFoundation\Response;
 use Closure;
 use Throwable;
 
+use function basename;
+
 class ErrorResponder
 {
     public function __construct(
@@ -33,7 +35,7 @@ class ErrorResponder
         } else {
             $status = HttpStatusCode::INTERNAL_SERVER_ERROR;
             $diagnostics = $this->debug;
-            $message = $this->debug ? (string) $exception : 'Internal server error.';
+            $message = $this->debug ? $this->diagnostics($exception) : 'Internal server error.';
             $log = "Arix: {$exception}";
 
             try {
@@ -79,5 +81,24 @@ class ErrorResponder
         $response->headers->set('X-Content-Type-Options', 'nosniff');
 
         return $response;
+    }
+
+    /**
+     * A summary of an unexpected failure for the client.
+     *
+     * The full trace stays in the server log: a response must not disclose
+     * the deployment layout or the internal call chain.
+     */
+    private function diagnostics(Throwable $exception): string
+    {
+        $summary = $exception::class . ': ' . $exception->getMessage()
+            . ' in ' . basename($exception->getFile()) . ':' . $exception->getLine();
+        $previous = $exception->getPrevious();
+
+        if ($previous !== null) {
+            $summary .= "\nCaused by " . $previous::class . ': ' . $previous->getMessage();
+        }
+
+        return $summary;
     }
 }

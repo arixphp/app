@@ -9,9 +9,30 @@ use CurlHandle;
 use InvalidArgumentException;
 use JsonException;
 
+use function array_keys;
+use function array_map;
+use function array_values;
+use function curl_error;
+use function curl_exec;
+use function curl_getinfo;
+use function curl_init;
+use function curl_setopt_array;
+use function explode;
+use function filter_var;
+use function http_build_query;
+use function implode;
 use function in_array;
+use function is_array;
 use function is_string;
+use function parse_url;
+use function preg_match;
+use function str_contains;
+use function str_ends_with;
+use function str_starts_with;
 use function strlen;
+use function strtolower;
+use function trim;
+use function defined;
 
 class Http
 {
@@ -32,9 +53,43 @@ class Http
 
     private int $redirects = 0;
 
+    private HostPolicy $hosts;
+
+    private string $proxy = '';
+
+    public function __construct()
+    {
+        $this->hosts = new HostPolicy();
+    }
+
     public static function create(): self
     {
         return new self();
+    }
+
+    /**
+     * Restrict the hosts the client may reach.
+     *
+     * Without an allowlist the client refuses the addresses that belong to
+     * the deployment instead of to a remote service.
+     *
+     * @param  list<string>  $hosts
+     */
+    public function withAllowedHosts(array $hosts): self
+    {
+        $clone = clone $this;
+        $clone->hosts = new HostPolicy($hosts);
+
+        return $clone;
+    }
+
+    /** Route the requests through a proxy instead of the environment. */
+    public function withProxy(string $proxy): self
+    {
+        $clone = clone $this;
+        $clone->proxy = $proxy;
+
+        return $clone;
     }
 
     /** @param array<string, string> $headers */
@@ -161,18 +216,7 @@ class Http
             throw new InvalidArgumentException('Choose JSON or form data, not both.');
         }
 
-        $scheme = parse_url($url, PHP_URL_SCHEME);
-
-        if (! is_string($scheme) || ! in_array(strtolower($scheme), ['http', 'https'], true)) {
-            throw new InvalidArgumentException('Only HTTP and HTTPS URLs are supported.');
-        }
-
-        $fragment = '';
-
-        if (str_contains($url, '#')) {
-            [$url, $fragment] = explode('#', $url, 2);
-            $fragment = '#' . $fragment;
-        }
+        $url = $this->normalize($url);
 
         if ($query !== []) {
             if (! str_ends_with($url, '?') && ! str_ends_with($url, '&')) {
@@ -181,8 +225,6 @@ class Http
 
             $url .= http_build_query($query, '', '&', PHP_QUERY_RFC3986);
         }
-
-        $url .= $fragment;
 
         $headers = $this->headers;
         $body = null;
@@ -199,6 +241,117 @@ class Http
             throw new HttpClientException('The Arix HTTP client requires ext-curl.');
         }
 
+        $current = $url;
+
+        for ($hop = 0; $hop <= $this->redirects; $hop++) {
+            $response = $this->send($method, $current, $headers, $body);
+            $location = $response->header('location');
+
+            if ($location === null || $hop === $this->redirects) {
+                return $response;
+            }
+
+            $next = $this->redirect($current, $location);
+
+            if (strtolower((string) parse_url($current, PHP_URL_SCHEME)) === 'https'
+                && strtolower((string) parse_url($next, PHP_URL_SCHEME)) === 'http') {
+                throw new HttpClientException('HTTPS redirects cannot downgrade to HTTP.');
+            }
+
+            // Credentials belong to an origin, including its scheme and port.
+            if ($this->origin($next) !== $this->origin($current)) {
+                $headers = self::withoutCredentials($headers);
+            }
+
+            $current = $next;
+        }
+
+        return $this->send($method, $current, $headers, $body);
+    }
+
+    /** @return array{string, string, int} */
+    private function origin(string $url): array
+    {
+
+        return [strtolower((string) parse_url($url, PHP_URL_SCHEME)), HostPolicy::host($url), HostPolicy::port($url)];
+    }
+
+    /**
+     * Resolve a redirect target against the URL that produced it.
+     */
+    private function redirect(string $current, string $location): string
+    {
+        $location = trim($location);
+
+        if ($location === '') {
+            throw new HttpClientException('The response contained an empty redirect location.');
+        }
+
+        if (str_starts_with($location, '/')) {
+            $parts = parse_url($current);
+
+            if (! is_array($parts) || ! isset($parts['scheme'], $parts['host'])) {
+                throw new HttpClientException('The redirect location cannot be resolved.');
+            }
+
+            $authority = $parts['host'] . (isset($parts['port']) ? ':' . $parts['port'] : '');
+
+            return $this->normalize($parts['scheme'] . '://' . $authority . $location);
+        }
+
+        if (preg_match('~^[a-z][a-z0-9+.-]*://~i', $location) === 1) {
+            return $this->normalize($location);
+        }
+
+        return $this->normalize($current);
+    }
+
+    /**
+     * The URL of a request, without its fragment and with a supported scheme.
+     */
+    private function normalize(string $url): string
+    {
+        $scheme = parse_url($url, PHP_URL_SCHEME);
+
+        if (! is_string($scheme) || ! in_array(strtolower($scheme), ['http', 'https'], true)) {
+            throw new InvalidArgumentException('Only HTTP and HTTPS URLs are supported.');
+        }
+
+        if (str_contains($url, '#')) {
+            $url = explode('#', $url, 2)[0];
+        }
+
+        return $url;
+    }
+
+    /**
+     * The headers a redirect to another origin may receive.
+     *
+     * A redirect to another origin is a different service: the credentials of
+     * the first one must not travel with it.
+     *
+     * @param  array<string, string>  $headers
+     * @return array<string, string>
+     */
+    private static function withoutCredentials(array $headers): array
+    {
+        $safe = [];
+
+        foreach ($headers as $name => $value) {
+            if (in_array(strtolower($name), ['user-agent', 'content-type'], true)) {
+                $safe[$name] = $value;
+            }
+        }
+
+        return $safe;
+    }
+
+    /**
+     * @param  array<string, string>  $headers
+     */
+    protected function send(HttpMethod $method, string $url, array $headers, string|null $body): Response
+    {
+        $target = $this->hosts->resolve($url);
         $handle = curl_init();
 
         if ($handle === false) {
@@ -215,8 +368,7 @@ class Http
                 CURLOPT_CUSTOMREQUEST => $method->value,
                 CURLOPT_TIMEOUT => $this->timeout,
                 CURLOPT_CONNECTTIMEOUT => min($this->connectTimeout, $this->timeout),
-                CURLOPT_FOLLOWLOCATION => $this->redirects > 0,
-                CURLOPT_MAXREDIRS => $this->redirects,
+                CURLOPT_FOLLOWLOCATION => false,
                 CURLOPT_SSL_VERIFYPEER => true,
                 CURLOPT_SSL_VERIFYHOST => 2,
                 CURLOPT_ENCODING => '',
@@ -257,6 +409,15 @@ class Http
             foreach ($this->protocolRestrictions() as $option => $value) {
                 $options[$option] = $value;
             }
+
+            // The request is pinned to the addresses the policy accepted, so a
+            // second resolution cannot reach another target.
+            if ($target['addresses'] !== [] && filter_var($target['host'], FILTER_VALIDATE_IP) === false) {
+                $options[CURLOPT_RESOLVE] = ["{$target['host']}:{$target['port']}:" . implode(',', $target['addresses'])];
+            }
+
+            // The environment must not route the request to another proxy.
+            $options[CURLOPT_PROXY] = $this->proxy;
 
             if ($method === HttpMethod::HEAD) {
                 $options[CURLOPT_NOBODY] = true;

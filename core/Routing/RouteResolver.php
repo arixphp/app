@@ -7,7 +7,8 @@ namespace Arix\Routing;
 use Arix\Config\ConfigServices;
 use Arix\Container\Container;
 use Arix\Container\ContainerContext;
-use Arix\Support\Path;
+use Arix\Support\ApplicationAutoloader;
+use Arix\Support\RuntimePaths;
 use LogicException;
 use RuntimeException;
 
@@ -17,15 +18,21 @@ class RouteResolver
 {
     public static function fromRoot(string $root): RouteUrlGenerator
     {
-        $base = self::canonicalDirectory($root);
-        $configDirectory = Path::join($base, 'app', 'config');
-        $routesFile = Path::join($base, 'app', 'routes.php');
+        $paths = RuntimePaths::fromApplicationRoot($root);
 
-        if (! is_dir($configDirectory)) {
+        return ApplicationAutoloader::run($paths->root, static fn (): RouteUrlGenerator => self::load($paths));
+    }
+
+    private static function load(RuntimePaths $paths): RouteUrlGenerator
+    {
+        $configDirectory = $paths->resolve(['app', 'config']);
+        $routesFile = $paths->resolve(['app', 'routes.php']);
+
+        if ($configDirectory === null || ! is_dir($configDirectory)) {
             throw new LogicException('No active container.');
         }
 
-        if (is_link($routesFile) || ! is_file($routesFile) || ! is_readable($routesFile)) {
+        if ($routesFile === null || ! is_file($routesFile) || ! is_readable($routesFile)) {
             throw new LogicException('No active container.');
         }
 
@@ -61,32 +68,5 @@ class RouteResolver
         }
 
         return self::fromRoot($cwd);
-    }
-
-    private static function canonicalDirectory(string $path): string
-    {
-        $ancestor = $path;
-
-        while (true) {
-            if (is_link($ancestor)) {
-                throw new LogicException('No active container.');
-            }
-
-            $parent = dirname($ancestor);
-
-            if ($parent === $ancestor) {
-                break;
-            }
-
-            $ancestor = $parent;
-        }
-
-        $real = realpath($path);
-
-        if ($real === false || ! is_dir($real)) {
-            throw new LogicException('No active container.');
-        }
-
-        return $real;
     }
 }

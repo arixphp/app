@@ -58,7 +58,12 @@ install Pest in the application. XML and tests are trusted developer code, not a
 - Routes: `app/routes.php` calls `Arix\Facades\Route::get('/route', [Controller::class,
   'action'])`. The facade uses the active container's RouteCollector; registration never
   constructs controllers. The filename must match class/case exactly:
-  `App\Controllers\Blog\ArticleController` → `app/controllers/Blog/ArticleController.php`.
+  `App\Controllers\Blog\ArticleController` → `app/Controllers/Blog/ArticleController.php`.
+- Classes: the core autoloads `App\` classes, interfaces, traits and enums from `app/` on
+  demand, with exact case and no Composer: `App\Utils\Formatter` → `app/Utils/Formatter.php`.
+  Create directories when the site needs them; the skeleton ships no extra ones. The
+  lowercase resource directories `config`, `lang` and `views` are not namespaces, and the
+  `bootstrap`, `routes`, `services` and `schedules` entry names are not class names.
 - `app/services.php` is optional and returns a registration closure when present; explicit
   bindings only, no autowiring. Controllers without required constructor parameters resolve
   from their routes alone; explicit bindings always win. Actions are public instance methods
@@ -71,10 +76,26 @@ install Pest in the application. XML and tests are trusted developer code, not a
 - `view()` and `trans()` require an active container (`ContainerContext::run()`); outside a
   scope they throw `LogicException` (write tests that use them accordingly).
 - GET/HEAD/POST/PUT/PATCH/DELETE/OPTIONS/QUERY and extension methods via match(). Per-path
-  405/Allow; HEAD falls back to GET; OPTIONS automatic 204 unless explicitly registered. There
-  are no dynamic routes. Middleware implements `Arix\Contracts\Middleware` and is registered
-  explicitly in `app/bootstrap.php`. PHP's local server may reject QUERY with 501 before
-  running Arix.
+  405/Allow; HEAD falls back to GET; OPTIONS automatic 204 unless explicitly registered.
+  Middleware implements `Arix\Contracts\Middleware` and is registered explicitly in
+  `app/bootstrap.php`. PHP's local server may reject QUERY with 501 before running Arix.
+- Dynamic routes are supported: `Route::get('/articles/{id:\d+}', ...)` and optional segments
+  `Route::get('/archive[/{year:\d+}]', ...)`. A parameter is exactly one path segment: the
+  captured value never contains `/`, a control character or a `.`/`..` segment, and a request
+  that does not respect it is answered with 404. The constraint is compiled into the route
+  pattern, so it must be a valid pattern without capturing groups and without the `~`
+  delimiter. A parameter value is controlled by the visitor: escape it before it reaches a
+  response. Parameter names beginning with `_arix_` are reserved.
+- The request path is decoded exactly once. A path that still carries an escape after that
+  decoding is rejected with 400, and a path longer than 4096 bytes is rejected with 400.
+- The compiled template cache and the scheduler log belong to the framework: they are always
+  `storage/cache` and `storage/logs/cron.log` inside the application root. `cache.path` and
+  `schedule.log` are reserved configuration keys and are rejected when a configuration file
+  declares them. `cache.version` and `cache.templates` stay configurable, as do
+  `schedule.timezone` and `schedule.grace`.
+- `app.trusted_hosts` accepts a list of host patterns. Without it the `Host` header of a
+  request is controlled by the visitor, and application code that builds absolute URLs from it
+  is exposed to host header poisoning.
 - Request::body() returns repeatable raw bytes, not parsed or validated data.
   app.max_body_bytes controls the bounded capture (default 1048576), excess returns 413. No
   FormRequests, uploads, auth, CSRF or CORS in this stage.

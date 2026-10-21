@@ -9,6 +9,7 @@ use Arix\HttpFoundation\Request;
 use InvalidArgumentException;
 use RuntimeException;
 
+use function ctype_digit;
 use function is_resource;
 use function is_string;
 use function strlen;
@@ -24,6 +25,8 @@ class RequestFactory
 
     public function fromGlobals(): Request
     {
+        $this->assertContentLength();
+
         $input = fopen('php://input', 'rb');
 
         if ($input === false) {
@@ -34,6 +37,25 @@ class RequestFactory
             return $this->create($_SERVER, $_GET, $_POST, $_COOKIE, $_FILES, $input);
         } finally {
             fclose($input);
+        }
+    }
+
+    /**
+     * Refuse an announced body before it is read.
+     *
+     * The body of a request is bounded before PHP parses it, so an oversized
+     * request is rejected without being materialized.
+     */
+    private function assertContentLength(): void
+    {
+        $length = $_SERVER['CONTENT_LENGTH'] ?? null;
+
+        if (! is_string($length) || $length === '' || ! ctype_digit($length)) {
+            return;
+        }
+
+        if ((int) $length > $this->maxBodyBytes) {
+            throw new HttpException(HttpStatusCode::CONTENT_TOO_LARGE, 'Request body is too large.');
         }
     }
 

@@ -17,6 +17,11 @@ use function count;
 use function in_array;
 use function is_array;
 use function is_string;
+use function preg_match;
+use function restore_error_handler;
+use function set_error_handler;
+use function str_contains;
+use function str_starts_with;
 
 class RouteRegistry
 {
@@ -108,9 +113,15 @@ class RouteRegistry
                     throw new InvalidArgumentException('Literal route paths cannot contain a query or fragment.');
                 }
 
-                if (is_array($part) && str_starts_with($part[0], '_arix_')) {
+                if (! is_array($part)) {
+                    continue;
+                }
+
+                if (str_starts_with($part[0], '_arix_')) {
                     throw new InvalidArgumentException('Route parameter names beginning with _arix_ are reserved.');
                 }
+
+                self::assertConstraint($part[1]);
             }
         }
 
@@ -120,6 +131,42 @@ class RouteRegistry
         $this->routes[] = $route;
 
         return $route;
+    }
+
+    /**
+     * A constraint is compiled into the route pattern of the router, so it
+     * must be a valid pattern without capturing groups.
+     */
+    private static function assertConstraint(string $constraint): void
+    {
+        if ($constraint === '') {
+            throw new InvalidArgumentException('Route parameter constraints cannot be empty.');
+        }
+
+        if (str_contains($constraint, '~')) {
+            throw new InvalidArgumentException('Route parameter constraints cannot contain the pattern delimiter.');
+        }
+
+        // Every group would shift the position of the captured values.
+        if (preg_match('~\((?!\?(?:[:=!]|<[=!]))~', $constraint) === 1) {
+            throw new InvalidArgumentException('Route parameter constraints cannot contain capturing groups.');
+        }
+
+        if (! self::isValidPattern('~^(?:' . $constraint . ')$~D')) {
+            throw new InvalidArgumentException('Route parameter constraints must be a valid pattern.');
+        }
+    }
+
+    /** Compile a pattern without letting an invalid one reach the router. */
+    private static function isValidPattern(string $pattern): bool
+    {
+        set_error_handler(static fn (): bool => true);
+
+        try {
+            return preg_match($pattern, '') !== false;
+        } finally {
+            restore_error_handler();
+        }
     }
 
     public function dispatcher(): Dispatcher

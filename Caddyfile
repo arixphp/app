@@ -35,27 +35,27 @@
 
 	route {
 		# ARIX ASSET POLICY BEGIN
-		@private path_regexp arix_private `(?i)(?:^/(?:app|core|cli|tests|docs|storage|assets)(?:/|$)|^/phpunit\.xml(?:\.dist)?$|(?:^|/)\.)`
-		respond @private 403
-		@resource_method {
-			path_regexp arix_resource_method `(?i)^/(?:styles|scripts|fonts|media)(?:/|$)`
-			not method GET HEAD
-		}
-		header @resource_method Allow "GET, HEAD"
-		respond @resource_method 405
-		header X-Content-Type-Options nosniff
-		@public_files path_regexp arix_public `^/(?:styles/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:css)|scripts/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:js)|fonts/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:woff|woff2|ttf|otf)|media/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:avif|gif|ico|jpg|jpeg|png|webp|mp4|webm|ogv)|favicon\.ico)$`
-		file_server @public_files {
-			pass_thru
-		}
-		@public_directories path_regexp arix_public_directories `(?i)^/(?:styles|scripts|fonts|media)(?:/|$)`
-		respond @public_directories 403
-		@robots {
-			path /robots.txt
-			file
-		}
-		file_server @robots
-		# ARIX ASSET POLICY END
+@private path_regexp arix_private `(?i)(?:^/(?:app|core|cli|tests|docs|storage|assets)(?:/|$)|^/phpunit\.xml(?:\.dist)?$|(?:^|/)\.)`
+respond @private 403
+@resource_method {
+    path_regexp arix_resource_method `(?i)^/(?:styles|scripts|fonts|media)(?:/|$)`
+    not method GET HEAD
+}
+header @resource_method Allow "GET, HEAD"
+respond @resource_method 405
+header ?X-Content-Type-Options nosniff
+@public_files path_regexp arix_public `^/(?:styles/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:css)|scripts/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:js)|fonts/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:woff|woff2|ttf|otf)|media/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:avif|gif|ico|jpg|jpeg|png|webp|mp4|webm|ogv)|favicon\.ico)$`
+file_server @public_files {
+    pass_thru
+}
+@public_directories path_regexp arix_public_directories `(?i)^/(?:styles|scripts|fonts|media)(?:/|$)`
+respond @public_directories 403
+@robots {
+    path /robots.txt
+    file
+}
+file_server @robots
+# ARIX ASSET POLICY END
 
 		# ArixPHP is a front-controller application; never execute another PHP file.
 		rewrite * /index.php

@@ -12,6 +12,9 @@ use function strlen;
 
 class QueryPathValidator
 {
+    /** The longest request path the router accepts. */
+    public const int MAX_PATH_BYTES = 4096;
+
     public function __construct(public readonly string $basePath = '')
     {
         if ($basePath !== '') {
@@ -46,7 +49,19 @@ class QueryPathValidator
             throw new HttpException(HttpStatusCode::BAD_REQUEST, 'Invalid path.');
         }
 
+        // A bounded path keeps the work of every route pattern predictable.
+        if (strlen($raw) > self::MAX_PATH_BYTES) {
+            throw new HttpException(HttpStatusCode::BAD_REQUEST, 'Invalid path.');
+        }
+
         $path = rawurldecode($raw);
+
+        // The path is decoded exactly once. A decoded path that still carries
+        // an escape sequence would be decoded again downstream, so it is
+        // rejected here instead of reaching the router.
+        if (str_contains($path, '%')) {
+            throw new HttpException(HttpStatusCode::BAD_REQUEST, 'Invalid path.');
+        }
 
         if (preg_match('/[\x00-\x1f\x7f\\\\]/', $path) || ! preg_match('//u', $path)) {
             throw new HttpException(HttpStatusCode::BAD_REQUEST, 'Invalid path.');

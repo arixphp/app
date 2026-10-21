@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Arix\Http;
 
 use Arix\Constants\HttpMethod;
+use Arix\Constants\HttpStatusCode;
 use Arix\Container\Container;
 use Arix\Container\ContainerContext;
 use Arix\Contracts\RequestHandler;
@@ -14,6 +15,8 @@ use Arix\Support\ApplicationAutoloader;
 use Arix\Views\ErrorViewRenderer;
 use Closure;
 use Throwable;
+
+use function array_map;
 
 class Kernel
 {
@@ -56,6 +59,9 @@ class Kernel
         $container = new Container();
 
         return ContainerContext::run($container, function () use ($request, $container): Response {
+            // HttpFoundation's getter returns {pattern}i; its setter takes raw patterns.
+            $trustedHosts = array_map(static fn (string $pattern): string => substr($pattern, 1, -2), Request::getTrustedHosts());
+
             try {
                 Request::setAllowedHttpMethodOverride([]);
 
@@ -67,6 +73,13 @@ class Kernel
                 if ($this->configure !== null) {
                     ($this->configure)($container);
                 }
+
+                // Validate against this application's policy before middleware or routing.
+                $this->validateHost($request);
+
+                // Application configuration must not re-enable the method
+                // override: the routed method is always the sent one.
+                Request::setAllowedHttpMethodOverride([]);
 
                 $response = (new MiddlewareDispatcher())->dispatch(
                     $request,
@@ -88,7 +101,24 @@ class Kernel
 
                     return $container->get(ErrorViewRenderer::class)->render($status, $message);
                 })->prepare($fallback);
+            } finally {
+                Request::setTrustedHosts($trustedHosts);
             }
         });
+    }
+
+    private function validateHost(Request $request): void
+    {
+        // A previously rejected Request can return an empty host instead of throwing
+        // again. Validate its current server/header data with fresh validity state.
+        $validation = new Request(server: $request->server->all());
+        $validation->headers->replace($request->headers->all());
+        $host = $validation->getHost();
+
+        // Consumers must see the same host, even if an injected Request cached
+        // forwarded-header values before proxy configuration changed.
+        if ($request->getHost() !== $host) {
+            throw new HttpException(HttpStatusCode::BAD_REQUEST, 'Invalid host.');
+        }
     }
 }

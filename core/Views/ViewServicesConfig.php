@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Arix\Views;
 
 use Arix\HttpFoundation\Request;
-use Arix\Support\Path;
+use Arix\Support\RuntimePaths;
 use InvalidArgumentException;
 
 use function is_array;
@@ -88,20 +88,20 @@ class ViewServicesConfig
             throw new InvalidArgumentException($missing);
         }
 
-        return $real;
+        return RuntimePaths::fromStrictRoot($path)->root;
     }
 
     private static function cache(array $cache, string $base): array
     {
-        $path = $cache['path'] ?? Path::join($base, 'storage', 'cache');
-
         $version = $cache['version'] ?? '1';
 
-        if (! is_string($path) || $path === '' || ! is_string($version) || $version === '') {
-            throw new InvalidArgumentException('View services require cache.path and cache.version.');
+        if (! is_string($version) || $version === '') {
+            throw new InvalidArgumentException('View services require cache.version.');
         }
 
-        return [$path, $version];
+        // The compiled template cache is framework-owned: compiled templates
+        // are PHP files and must never land in a published directory.
+        return [RuntimePaths::fromStrictRoot($base)->cacheDirectory(), $version];
     }
 
     private static function requestPath(Request $request): string

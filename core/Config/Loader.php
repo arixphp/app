@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Arix\Config;
 
+use Arix\Support\RuntimePaths;
 use InvalidArgumentException;
 use RuntimeException;
 use Throwable;
@@ -16,7 +17,13 @@ class Loader
     {
         $directory ??= dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 'config';
 
-        if (! file_exists($directory)) {
+        if (is_file($directory)) {
+            throw new RuntimeException("Configuration directory is not readable: {$directory}");
+        }
+
+        $paths = RuntimePaths::fromOptionalStrictRoot($directory);
+
+        if ($paths === null) {
 
             return new Repository([]);
         }
@@ -25,7 +32,7 @@ class Loader
             throw new RuntimeException("Configuration directory is not readable: {$directory}");
         }
 
-        $files = scandir($directory);
+        $files = scandir($paths->root);
 
         if ($files === false) {
             throw new RuntimeException("Cannot list configuration directory: {$directory}");
@@ -34,9 +41,13 @@ class Loader
         $values = [];
 
         foreach ($files as $name) {
-            $file = $directory . DIRECTORY_SEPARATOR . $name;
+            if (! str_ends_with($name, '.php')) {
+                continue;
+            }
 
-            if (! str_ends_with($name, '.php') || ! is_file($file)) {
+            $file = $paths->resolve([$name]);
+
+            if ($file === null || ! is_file($file)) {
                 continue;
             }
 
@@ -52,7 +63,6 @@ class Loader
 
             try {
                 $configuration = (static function (string $file): mixed {
-
                     return require $file;
                 })($file);
             } catch (Throwable $exception) {
@@ -64,6 +74,8 @@ class Loader
             }
 
             Repository::validate($configuration, $file);
+            ReservedKeys::assert($key, $configuration, $file);
+
             $values[$key] = $configuration;
         }
 

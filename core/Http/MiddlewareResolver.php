@@ -77,14 +77,14 @@ class MiddlewareResolver
         foreach (explode('\\', $relative) as $index => $segment) {
             $name = $index === count(explode('\\', $relative)) - 1 ? "{$segment}.php" : $segment;
 
-            if (is_link($path) || ! in_array($name, scandir($path) ?: [], true)) {
+            if (Path::isLink($path) || ! in_array($name, scandir($path) ?: [], true)) {
                 throw new RuntimeException('Middleware file is missing, linked, or has incorrect case.');
             }
 
             $path .= DIRECTORY_SEPARATOR . $name;
         }
 
-        if (is_link($path) || ! is_file($path)) {
+        if (Path::isLink($path) || ! is_file($path)) {
             throw new RuntimeException('Middleware file is missing or linked.');
         }
 

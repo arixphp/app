@@ -17,6 +17,7 @@ DirectoryIndex index.php
 </FilesMatch>
 
 # ARIX ASSET POLICY BEGIN
+# The virtual host must set "TraceEnable Off"; it cannot be set from .htaccess.
 RewriteEngine On
 RewriteRule ^(?:app|core|cli|tests|docs|storage|assets)(?:/|$) - [F,L,NC]
 RewriteRule (^|/)\. - [F,L]
@@ -24,8 +25,7 @@ RewriteRule ^phpunit\.xml(?:\.dist)?$ - [F,L,NC]
 RewriteRule ^(?:styles|scripts|fonts|media)(?:/|$) - [E=ARIX_ASSET:1,NC]
 RewriteCond %{REQUEST_METHOD} !^(?:GET|HEAD)$
 RewriteRule ^(?:styles|scripts|fonts|media)(?:/|$) - [R=405,L,NC]
-Header onsuccess unset Allow env=ARIX_ASSET
-Header always set Allow "GET, HEAD" env=ARIX_ASSET
+Header always set Allow "GET, HEAD" env=ARIX_ASSET expr=%{REQUEST_METHOD} !~ ^(?:GET|HEAD)$
 Header always set X-Content-Type-Options nosniff
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^(?:index\.php|robots\.txt|(?:styles/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:css)|scripts/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:js)|fonts/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:woff|woff2|ttf|otf)|media/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:avif|gif|ico|jpg|jpeg|png|webp|mp4|webm|ogv)|favicon\.ico))$ - [L]

@@ -12,6 +12,7 @@ use function in_array;
 use function is_array;
 use function is_int;
 use function is_string;
+use function preg_match;
 
 class RouteUrlGenerator
 {
@@ -75,7 +76,11 @@ class RouteUrlGenerator
 
                 $value = (string) $params[$key];
 
-                if (@preg_match('/^(?:' . $regex . ')$/D', $value) !== 1) {
+                if (! RouteParameter::isSafe($value)) {
+                    throw new InvalidArgumentException("Invalid parameter '{$key}' for route: {$name}");
+                }
+
+                if (@preg_match('~^(?:' . $regex . ')$~D', $value) !== 1) {
                     throw new InvalidArgumentException("Invalid parameter '{$key}' for route: {$name}");
                 }
             }

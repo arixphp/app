@@ -158,7 +158,7 @@ class ControllerDispatcher
         $ancestor = $directory;
 
         while (true) {
-            if (is_link($ancestor)) {
+            if (Path::isLink($ancestor)) {
                 throw new RuntimeException('Controller directory is linked.');
             }
 
@@ -185,7 +185,7 @@ class ControllerDispatcher
 
             $path .= DIRECTORY_SEPARATOR . $segment;
 
-            if (is_link($path)) {
+            if (Path::isLink($path)) {
                 throw new RuntimeException('Controller symlinks are not supported.');
             }
         }

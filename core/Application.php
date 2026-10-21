@@ -21,11 +21,13 @@ use Arix\Scheduling\Schedule;
 use Arix\Storage\StorageServices;
 use Arix\Support\ApplicationAutoloader;
 use Arix\Support\Path;
+use Arix\Support\RuntimePaths;
 use Arix\Views\ViewServices;
 use Closure;
 use RuntimeException;
 
 use function array_key_exists;
+use function array_values;
 use function is_array;
 use function is_string;
 
@@ -35,7 +37,6 @@ class Application
         private readonly string $root,
         private readonly string $configDirectory,
         private readonly string $controllerDirectory,
-        private readonly string $servicesFile,
         private readonly string $routesFile,
         private readonly string $viewsDirectory,
         private readonly string $languageDirectory,
@@ -44,15 +45,18 @@ class Application
 
     public static function create(string $root): self
     {
-        $base = self::canonicalDirectory($root, 'Application root');
+        $base = RuntimePaths::fromApplicationRoot($root)->root;
 
         return ApplicationAutoloader::run($base, static fn (): self => self::load($base));
     }
 
     private static function load(string $base): self
     {
-        $configDirectory = Path::join($base, 'app', 'config');
-        $routesFile = Path::join($base, 'app', 'routes.php');
+        $paths = RuntimePaths::fromStrictRoot($base);
+        $configDirectory = $paths->resolve(['app', 'config'])
+            ?? throw new RuntimeException('Application configuration is missing.');
+        $routesFile = $paths->resolve(['app', 'routes.php'])
+            ?? throw new RuntimeException('Application routes are missing.');
 
         if (! is_dir($configDirectory)) {
             throw new RuntimeException("Application configuration is missing: {$configDirectory}");
@@ -63,9 +67,9 @@ class Application
         }
 
         $defaults = ConfigServices::register(new Container(), $configDirectory);
-        $servicesFile = Path::join($base, 'app', 'services.php');
+        $servicesFile = $paths->resolve(['app', 'services.php']);
 
-        if (is_file($servicesFile)) {
+        if ($servicesFile !== null && is_file($servicesFile)) {
             self::servicesClosure($servicesFile);
         }
 
@@ -73,7 +77,6 @@ class Application
             $base,
             $configDirectory,
             Path::join($base, 'app', 'Controllers'),
-            $servicesFile,
             $routesFile,
             Path::join($base, 'app', 'views'),
             Path::join($base, 'app', 'lang'),
@@ -117,10 +120,16 @@ class Application
     public function registerConsole(Container $container): void
     {
         ApplicationAutoloader::run($this->root, function () use ($container): void {
-            $container->instance(Request::class, new Request(server: ['REQUEST_METHOD' => HttpMethod::GET->value], content: ''));
+            $trustedHosts = array_map(static fn (string $pattern): string => substr($pattern, 1, -2), Request::getTrustedHosts());
 
-            $this->register($container);
-            $this->registerPresentation($container, routes: false);
+            try {
+                $container->instance(Request::class, new Request(server: ['REQUEST_METHOD' => HttpMethod::GET->value], content: ''));
+
+                $this->register($container);
+                $this->registerPresentation($container, routes: false);
+            } finally {
+                Request::setTrustedHosts($trustedHosts);
+            }
         });
     }
 
@@ -133,9 +142,9 @@ class Application
 
     private function registerSchedules(Schedule $schedule): void
     {
-        $file = Path::join($this->root, 'app', 'schedules.php');
+        $file = RuntimePaths::fromStrictRoot($this->root)->resolve(['app', 'schedules.php']);
 
-        if (! is_file($file)) {
+        if ($file === null || ! is_file($file)) {
             return;
         }
 
@@ -154,12 +163,16 @@ class Application
 
     private function register(Container $container): void
     {
-        $config = ConfigServices::register($container, $this->configDirectory);
+        $paths = RuntimePaths::fromStrictRoot($this->root);
+        $configDirectory = $paths->resolve(['app', 'config'])
+            ?? throw new RuntimeException("Application configuration is missing: {$this->configDirectory}");
+        $config = ConfigServices::register($container, $configDirectory);
+        $servicesFile = $paths->resolve(['app', 'services.php']);
         $container->instance(RouteRegistry::class, new RouteRegistry());
         $container->instance(MiddlewareResolver::class, new MiddlewareResolver(Path::join($this->root, 'app', 'Middleware')));
 
-        if (is_file($this->servicesFile)) {
-            self::servicesClosure($this->servicesFile)($container);
+        if ($servicesFile !== null && is_file($servicesFile)) {
+            self::servicesClosure($servicesFile)($container);
         }
 
         $app = $config->get('app');
@@ -168,22 +181,51 @@ class Application
             throw new RuntimeException('Application configuration is missing.');
         }
 
+        self::trustHosts($app);
         $container->get(Request::class)->setDefaultLocale($app['default_locale']);
+    }
+
+    /**
+     * Restrict the accepted host headers.
+     *
+     * Without this the host of a request is controlled by the visitor, and
+     * application code that builds absolute URLs from it is exposed to host
+     * header poisoning.
+     *
+     * @param  array<string, mixed>  $app
+     */
+    private static function trustHosts(array $app): void
+    {
+        $hosts = array_key_exists('trusted_hosts', $app) ? $app['trusted_hosts'] : [];
+
+        if (! is_array($hosts) || ! array_is_list($hosts)) {
+            throw new RuntimeException('Application trusted_hosts must be a list of host patterns.');
+        }
+
+        foreach ($hosts as $host) {
+            if (! is_string($host) || $host === '' || ! self::validHostPattern($host)) {
+                throw new RuntimeException('Application trusted_hosts must be a list of host patterns.');
+            }
+        }
+
+        Request::setTrustedHosts(array_values($hosts));
+    }
+
+    private static function validHostPattern(string $pattern): bool
+    {
+        set_error_handler(static fn (): bool => true);
+
+        try {
+
+            return preg_match("{(?|(?:{$pattern}))}i", '') !== false;
+        } finally {
+            restore_error_handler();
+        }
     }
 
     private function registerPresentation(Container $container, bool $routes = true): void
     {
         $config = $container->get(Repository::class);
-        $cachePath = $config->get('cache.path', 'storage/cache');
-
-        if (! is_string($cachePath) || $cachePath === '') {
-            throw new RuntimeException('Application cache path is missing.');
-        }
-
-        if (! Path::isAbsolute($cachePath)) {
-            $cachePath = Path::join($this->root, $cachePath);
-        }
-
         $app = $config->get('app');
 
         if (! is_array($app)) {
@@ -196,7 +238,7 @@ class Application
         $request = $container->get(Request::class);
         $path = $request->attributes->get('_arix_path', '/');
         AssetServices::register($container, $this->root, new UrlGenerator((string) ($app['base_path'] ?? ''), is_string($path) ? $path : '/'));
-        $cache = ['path' => $cachePath, 'version' => $config->get('cache.version', '1')];
+        $cache = ['version' => $config->get('cache.version', '1')];
         $cacheConfiguration = $config->get('cache', []);
 
         if (is_array($cacheConfiguration) && array_key_exists('templates', $cacheConfiguration)) {
@@ -210,18 +252,18 @@ class Application
             'lang' => $this->languageDirectory,
         ]);
 
-        StorageServices::register($container, Path::join($this->root, 'storage', 'app'));
+        $storage = RuntimePaths::fromStrictRoot($this->root)->storageDirectory();
+        StorageServices::register($container, Path::join($storage, 'app'));
 
         if ($routes) {
-            if (is_link($this->routesFile)) {
-                throw new RuntimeException("Application routes are linked: {$this->routesFile}");
-            }
+            $routesFile = RuntimePaths::fromStrictRoot($this->root)->resolve(['app', 'routes.php'])
+                ?? throw new RuntimeException("Application routes are missing: {$this->routesFile}");
 
-            if (! is_file($this->routesFile) || ! is_readable($this->routesFile)) {
+            if (! is_file($routesFile) || ! is_readable($routesFile)) {
                 throw new RuntimeException("Application routes are missing: {$this->routesFile}");
             }
 
-            require $this->routesFile;
+            require $routesFile;
         }
     }
 
@@ -242,32 +284,5 @@ class Application
         }
 
         return $configureServices;
-    }
-
-    private static function canonicalDirectory(string $path, string $label): string
-    {
-        $ancestor = $path;
-
-        while (true) {
-            if (is_link($ancestor)) {
-                throw new RuntimeException("{$label} is linked.");
-            }
-
-            $parent = dirname($ancestor);
-
-            if ($parent === $ancestor) {
-                break;
-            }
-
-            $ancestor = $parent;
-        }
-
-        $real = realpath($path);
-
-        if ($real === false || ! is_dir($real)) {
-            throw new RuntimeException("{$label} is missing: {$path}");
-        }
-
-        return $real;
     }
 }

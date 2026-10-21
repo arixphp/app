@@ -1,4 +1,4 @@
-Options -Indexes -MultiViews -ExecCGI -FollowSymLinks +SymLinksIfOwnerMatch
+Options -Indexes -MultiViews -ExecCGI -FollowSymLinks
 DirectoryIndex disabled
 SetHandler default-handler
 <FilesMatch "(?i)^(?![A-Za-z0-9_-]+\.(?:woff|woff2|ttf|otf)$)">

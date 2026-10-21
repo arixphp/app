@@ -10,6 +10,7 @@ use Arix\FastRoute\Dispatcher;
 use Arix\Http\HttpException;
 
 use function in_array;
+use function is_string;
 
 class Router
 {
@@ -21,6 +22,12 @@ class Router
         $result = $dispatcher->dispatch($method, $path);
 
         if ($result[0] === Dispatcher::FOUND) {
+            foreach ($result[2] as $value) {
+                if (! is_string($value) || ! RouteParameter::isSafe($value)) {
+                    throw new HttpException(HttpStatusCode::NOT_FOUND, 'Route not found.');
+                }
+            }
+
             return new RouteMatch($result[1], $result[2], []);
         }
 
