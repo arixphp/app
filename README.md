@@ -14,8 +14,8 @@ The official documentation will be available at [arix.omarbarbosa.com](https://a
 
 ## Security Vulnerabilities
 
-If you discover a security vulnerability within Phenix, please send an e-mail to Omar Barbosa via [contacto@omarbarbosa.com](mailto:contacto@omarbarbosa.com). All security vulnerabilities will be promptly addressed.
+If you discover a security vulnerability within ArixPHP, please send an e-mail to Omar Barbosa via [contacto@omarbarbosa.com](mailto:contacto@omarbarbosa.com). All security vulnerabilities will be promptly addressed.
 
 ## License
 
-The Phenix framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+The ArixPHP ecosystem is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
