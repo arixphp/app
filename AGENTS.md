@@ -27,8 +27,19 @@ Run every command from the application root.
   `arix js:update` refresh `styles/arix/` and `scripts/arix/`. All three accept `--dry-run`.
 - Server policy: `arix assets:policy apache|caddy|iis` renders or verifies the static asset
   exposure rules.
-- Debugging: only through the `APP_DEBUG=true|1` environment variable (`APP_DEBUG=true arix
-  tests`). There are no `.env` files.
+- Environment: the root `.env` is optional in development and production. The HTTP entry
+  point must instantiate `HttpRuntime(applicationRoot: __DIR__)`; the runtime loads `.env`.
+  Its `APP_` assignments take precedence over existing `$_ENV` and process variables through
+  `env()`. Direct `getenv()` is unchanged.
+  Do not add environment loading or debug parsing to `index.php`; the runtime owns it.
+- Debugging: `APP_DEBUG=true|1` enables debug; use `Arix\Runtime\Environment::debug()` for
+  boolean `app.debug`. Invalid values do not enable debug. Keep debug disabled in production.
+  Direct application/test bootstraps needing `.env` must explicitly wrap the complete operation
+  in `Environment::run($root, $callback)`; plain `Application::create()` does not discover it.
+- Protect `.env` and all variants/backups with the generated Apache/Caddy/IIS dot-file deny
+  rules before static serving. Ignore `.env` and `.env.*` in Git (only non-secret `.env.example`
+  may be versioned), restrict filesystem permissions and never log secrets. Linked environment
+  files are rejected. Git exclusion alone is not HTTP protection.
 - PHP ≥ 8.4.1 and ext-mbstring, enforced by `core/autoload.php`.
 - To check syntax: `php -l <file>`.
 
@@ -71,8 +82,14 @@ install Pest in the application. XML and tests are trusted developer code, not a
   RequestContext is available when factories resolve, not during initial registration.
 - Controller files contain declarations only; only the selected controller is loaded.
   Page/attributes/PageContext are removed, without aliases.
-- URLs have no automatic language prefix or negotiation: `/` renders directly, translations use
-  `app.default_locale`. UrlGenerator accepts base_path and current path, not locale arguments.
+- URLs have no automatic language prefix or negotiation: translations use `app.default_locale`.
+  HTTP derives its mount from HttpFoundation's script/URI metadata, not `app.url`.
+  URL, named-route and asset helpers emit absolute URLs; `url()->currentPath()` is
+  internal and `route('name', [], false)` excludes the mount. Assets exclude `index.php`.
+  Console/standalone routes use `app.url` (e.g. `env('APP_URL', 'http://localhost')`), including
+  its subdirectory. Invalid configured URLs fail. This is not a filesystem base_path helper.
+  Configure `app.trusted_hosts` for request-derived links; do not trust forwarded headers
+  implicitly. Server rewrites must retain script/mount metadata for autodetection.
 - `view()` and `trans()` require an active container (`ContainerContext::run()`); outside a
   scope they throw `LogicException` (write tests that use them accordingly).
 - GET/HEAD/POST/PUT/PATCH/DELETE/OPTIONS/QUERY and extension methods via match(). Per-path
@@ -145,12 +162,12 @@ applications created with `arix new`, which receive the document above from the 
   instructed, and read files before editing them because they may change during the session.
 - Framework development happens in the CLI project (`arixphp/cli`). Use the installed `arix`
   executable, or a local build of that project when a specific build is required.
-- Framework architecture and limitations: `docs/IMPLEMENTATION.md`. The known open finding
-  ARIX-SEC-001 (per-request fingerprinting before reading the cache) is tracked there; do not
-  rediscover it, and read it before touching cache invalidation.
-- Changes to `core/` require bumping `core/Version.php` (`ID`) or
-  `core/Views/TemplateCompiler.php` (`VERSION`); without the bump, existing sites keep serving
-  stale cached content.
+- Framework architecture and limitations: the CLI project's `docs/core-kernel.md`,
+  `docs/routing.md` and `docs/views.md`; open security findings are tracked there. Read them
+  before changing the affected subsystem.
+- `core/` is replaced by `arix core:update`; framework changes and template cache versioning
+  (`core/Views/TemplateEngine.php`, `VERSION`) belong in the CLI project. Do not edit the
+  installed core or its version constants by hand.
 - CI: `.github/workflows/ci.yml` runs on pushes and pull requests targeting `main` and
   `develop`. It runs on Ubuntu only, installs the published Arix CLI with Homebrew
   (`brew install arixphp/tap/arix`), then runs `arix tests` and `arix format --test` with that
