@@ -35,7 +35,7 @@ class ConsoleRuntime
             try {
                 $applicationRoot = RuntimePaths::fromApplicationRoot($applicationRoot)->root;
 
-                return ApplicationAutoloader::run($applicationRoot, fn (): int => $this->execute($applicationRoot, $container));
+                return Environment::run($applicationRoot, fn (): int => ApplicationAutoloader::run($applicationRoot, fn (): int => $this->execute($applicationRoot, $container)));
             } catch (Throwable $exception) {
                 fwrite(STDERR, 'Arix scheduler failed: ' . $exception->getMessage() . PHP_EOL);
 

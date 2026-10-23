@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Arix\Views;
 
-use Arix\HttpFoundation\Request;
 use Arix\Support\RuntimePaths;
 use InvalidArgumentException;
 
@@ -14,7 +13,6 @@ use function is_string;
 class ViewServicesConfig
 {
     private function __construct(
-        public readonly string $base,
         public readonly string $views,
         public readonly string $lang,
         public readonly string $cachePath,
@@ -22,18 +20,15 @@ class ViewServicesConfig
         public readonly array $locales,
         public readonly string $defaultLocale,
         public readonly string $locale,
-        public readonly string $basePath,
         public readonly string $appName,
-        public readonly string $requestPath,
         public readonly TemplateCachePolicy $templateCachePolicy,
     ) {}
 
-    public static function resolve(string $root, Request $request, array $configuration): self
+    public static function resolve(string $root, array $configuration): self
     {
         [$app, $cache, $views, $lang] = self::sections($configuration);
 
-        [$locales, $defaultLocale, $locale, $basePath, $appName] = self::application($app);
-
+        [$locales, $defaultLocale, $locale, $appName] = self::application($app);
         $base = self::directory($root, 'Application root is missing.');
 
         $views = self::directory($views, 'Application views directory is missing.');
@@ -42,7 +37,7 @@ class ViewServicesConfig
 
         [$cachePath, $cacheVersion] = self::cache($cache, $base);
 
-        return new self($base, $views, $lang, $cachePath, $cacheVersion, $locales, $defaultLocale, $locale, $basePath, $appName, self::requestPath($request), TemplateCachePolicy::fromConfiguration($cache));
+        return new self($views, $lang, $cachePath, $cacheVersion, $locales, $defaultLocale, $locale, $appName, TemplateCachePolicy::fromConfiguration($cache));
     }
 
     private static function sections(array $configuration): array
@@ -69,15 +64,13 @@ class ViewServicesConfig
         $defaultLocale = $app['default_locale'] ?? null;
         $locale = $app['locale'] ?? $defaultLocale;
 
-        $basePath = $app['base_path'] ?? '';
-
-        if (! is_array($locales) || ! is_string($defaultLocale) || ! is_string($locale) || ! is_string($basePath)) {
-            throw new InvalidArgumentException('View services require app.locales, app.default_locale and a string app.base_path.');
+        if (! is_array($locales) || ! is_string($defaultLocale) || ! is_string($locale)) {
+            throw new InvalidArgumentException('View services require app.locales and app.default_locale.');
         }
 
         $name = $app['name'] ?? null;
 
-        return [$locales, $defaultLocale, $locale, $basePath, is_string($name) ? $name : 'ArixPHP'];
+        return [$locales, $defaultLocale, $locale, is_string($name) ? $name : 'ArixPHP'];
     }
 
     private static function directory(string $path, string $missing): string
@@ -102,16 +95,5 @@ class ViewServicesConfig
         // The compiled template cache is framework-owned: compiled templates
         // are PHP files and must never land in a published directory.
         return [RuntimePaths::fromStrictRoot($base)->cacheDirectory(), $version];
-    }
-
-    private static function requestPath(Request $request): string
-    {
-        $path = $request->attributes->get('_arix_path');
-
-        if (! is_string($path) || ! str_starts_with($path, '/')) {
-            return '/';
-        }
-
-        return $path;
     }
 }

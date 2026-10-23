@@ -22,8 +22,6 @@ class Kernel
 {
     private readonly RequestFactory $requests;
 
-    private readonly QueryPathValidator $paths;
-
     private readonly ErrorResponder $errors;
 
     public function __construct(
@@ -31,13 +29,11 @@ class Kernel
         private readonly null|Closure $configure = null,
         bool $debug = false,
         int $maxBodyBytes = 1048576,
-        string $basePath = '',
         null|Closure $logger = null,
         private readonly array $middleware = [],
         private readonly string|null $applicationRoot = null,
     ) {
         $this->requests = new RequestFactory($maxBodyBytes);
-        $this->paths = new QueryPathValidator($basePath);
         $this->errors = new ErrorResponder($debug, $logger);
     }
 
@@ -67,7 +63,9 @@ class Kernel
 
                 $this->requests->capture($request);
 
-                $request->attributes->set('_arix_path', $this->paths->path($request));
+                $context = RequestUrlContext::fromRequest($request);
+                $request->attributes->set('_arix_url_context', $context);
+                $request->attributes->set('_arix_path', $context->path);
                 $container->instance(Request::class, $request);
 
                 if ($this->configure !== null) {

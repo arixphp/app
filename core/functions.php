@@ -16,6 +16,8 @@ use Arix\Views\Contracts\View;
 use Arix\Views\ViewFactory;
 
 use function array_key_exists as arrayKeyExists;
+use function is_string as isString;
+use function strlen as stringLength;
 
 /*
  * trigger_deprecation() is copied from symfony/deprecation-contracts.
@@ -104,6 +106,10 @@ if (! function_exists('route')) {
             return RouteResolver::fromCwd()->to($name, $params, $absolute);
         }
 
+        if ($container->has(RouteUrlGenerator::class)) {
+            return $container->get(RouteUrlGenerator::class)->to($name, $params, $absolute);
+        }
+
         $registry = $container->get(RouteRegistry::class);
         $urls = $container->get(UrlGenerator::class);
 
@@ -133,11 +139,32 @@ if (! function_exists('env')) {
             if ($value === false) {
                 return $default instanceof Closure ? $default() : $default;
             }
+
         }
 
-        return match ($value) {
+        if (! isString($value)) {
+            return $value;
+        }
+
+        $literal = trim($value);
+        $length = stringLength($literal);
+
+        if ($length >= 2 && ($literal[0] === '"' || $literal[0] === "'") && $literal[$length - 1] === $literal[0]) {
+            $content = substr($literal, 1, -1);
+
+            return $literal[0] === "'" ? $content : strtr($content, [
+                '\\"' => '"',
+                '\\\\' => '\\',
+                '\\n' => "\n",
+                '\\r' => "\r",
+                '\\t' => "\t",
+            ]);
+        }
+
+        return match (strtolower($literal)) {
             'true' => true,
             'false' => false,
+            'null' => null,
             default => $value,
         };
     }

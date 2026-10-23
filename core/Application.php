@@ -7,14 +7,17 @@ namespace Arix;
 use Arix\Assets\AssetServices;
 use Arix\Config\ConfigServices;
 use Arix\Config\Repository;
-use Arix\Constants\HttpMethod;
 use Arix\Container\Container;
 use Arix\Contracts\RequestHandler;
 use Arix\Http\Kernel;
 use Arix\Http\MiddlewareResolver;
+use Arix\Http\RequestUrlContext;
 use Arix\HttpFoundation\Request;
 use Arix\HttpFoundation\Response;
+use Arix\Routing\ApplicationUrl;
 use Arix\Routing\RouteRegistry;
+use Arix\Routing\RouteResolver;
+use Arix\Routing\RouteUrlGenerator;
 use Arix\Routing\RoutingHandler;
 use Arix\Routing\UrlGenerator;
 use Arix\Scheduling\Schedule;
@@ -29,6 +32,7 @@ use RuntimeException;
 use function array_key_exists;
 use function array_values;
 use function is_array;
+use function is_bool;
 use function is_string;
 
 class Application
@@ -91,6 +95,12 @@ class Application
 
     public function kernel(array $middleware = []): Kernel
     {
+        $debug = $this->defaults->get('app.debug', false);
+
+        if (! is_bool($debug)) {
+            $debug = false;
+        }
+
         $routing = new RoutingHandler($this->controllerDirectory);
         $register = $this->registerPresentation(...);
 
@@ -109,9 +119,8 @@ class Application
             configure: function (Container $container): void {
                 $this->register($container);
             },
-            debug: (bool) $this->defaults->get('app.debug', false),
+            debug: $debug,
             maxBodyBytes: (int) $this->defaults->get('app.max_body_bytes', 1048576),
-            basePath: (string) $this->defaults->get('app.base_path', ''),
             middleware: $middleware,
             applicationRoot: $this->root,
         );
@@ -123,10 +132,19 @@ class Application
             $trustedHosts = array_map(static fn (string $pattern): string => substr($pattern, 1, -2), Request::getTrustedHosts());
 
             try {
-                $container->instance(Request::class, new Request(server: ['REQUEST_METHOD' => HttpMethod::GET->value], content: ''));
+                $app = $this->defaults->get('app', []);
+                $request = ApplicationUrl::fromConfiguration($app)->request();
+                $context = RequestUrlContext::fromRequest($request);
+                $request->attributes->set('_arix_url_context', $context);
+                $request->attributes->set('_arix_path', $context->path);
+                $container->instance(Request::class, $request);
 
                 $this->register($container);
+                // Incoming HTTP host restrictions do not govern configured console URLs.
+                Request::setTrustedHosts([]);
                 $this->registerPresentation($container, routes: false);
+                // Schedules need named URLs, but route registration remains lazy.
+                $container->singleton(RouteUrlGenerator::class, fn (): RouteUrlGenerator => RouteResolver::fromRoot($this->root));
             } finally {
                 Request::setTrustedHosts($trustedHosts);
             }
@@ -236,8 +254,13 @@ class Application
         $container->instance(Repository::class, new Repository(array_replace($config->get(), ['app' => $app])));
 
         $request = $container->get(Request::class);
-        $path = $request->attributes->get('_arix_path', '/');
-        AssetServices::register($container, $this->root, new UrlGenerator((string) ($app['base_path'] ?? ''), is_string($path) ? $path : '/'));
+        $context = $request->attributes->get('_arix_url_context');
+
+        if (! $context instanceof RequestUrlContext) {
+            throw new RuntimeException('Validated request URL context is missing.');
+        }
+
+        AssetServices::register($container, $this->root, UrlGenerator::fromRequest($request, $context), UrlGenerator::fromRequest($request, $context, assets: true));
         $cache = ['version' => $config->get('cache.version', '1')];
         $cacheConfiguration = $config->get('cache', []);
 
@@ -245,7 +268,7 @@ class Application
             $cache['templates'] = $cacheConfiguration['templates'];
         }
 
-        ViewServices::register($container, $this->root, $container->get(Request::class), [
+        ViewServices::register($container, $this->root, [
             'app' => $app,
             'cache' => $cache,
             'views' => $this->viewsDirectory,

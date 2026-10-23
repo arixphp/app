@@ -27,12 +27,10 @@ class HttpRuntime
         'litespeed',
     ];
 
-    private readonly ErrorResponder $errors;
-
-    public function __construct(bool $debug = false, null|Closure $logger = null)
-    {
-        $this->errors = new ErrorResponder($debug, $logger);
-    }
+    public function __construct(
+        private readonly string $applicationRoot,
+        private readonly Closure|null $logger = null,
+    ) {}
 
     public function handle(Closure $bootstrap, string $sapi = PHP_SAPI): Response
     {
@@ -40,16 +38,24 @@ class HttpRuntime
             return $this->failure(new HttpException(HttpStatusCode::SERVICE_UNAVAILABLE, 'This PHP runtime is not supported.'));
         }
 
+        $errors = null;
+
         try {
-            $kernel = $bootstrap();
+            $execute = function () use ($bootstrap, &$errors): Response {
+                $errors = new ErrorResponder(Environment::debug(), $this->logger);
+                $kernel = $bootstrap();
 
-            if (! $kernel instanceof Kernel) {
-                throw new RuntimeException('Application bootstrap must return a Arix\\Http\\Kernel.');
-            }
+                if (! $kernel instanceof Kernel) {
+                    throw new RuntimeException('Application bootstrap must return a Arix\\Http\\Kernel.');
+                }
 
-            return $kernel->handle($kernel->requestFactory()->fromGlobals());
+                return $kernel->handle($kernel->requestFactory()->fromGlobals());
+            };
+
+            return Environment::run($this->applicationRoot, $execute);
         } catch (Throwable $exception) {
-            return $this->failure($exception);
+
+            return $this->failure($exception, $errors);
         }
     }
 
@@ -71,11 +77,11 @@ class HttpRuntime
         return 0;
     }
 
-    private function failure(Throwable $exception): Response
+    private function failure(Throwable $exception, ErrorResponder|null $errors = null): Response
     {
         $method = ($_SERVER['REQUEST_METHOD'] ?? '') === HttpMethod::HEAD->value ? HttpMethod::HEAD->value : HttpMethod::GET->value;
         $request = new Request(server: ['REQUEST_METHOD' => $method], content: '');
 
-        return $this->errors->respond($exception)->prepare($request);
+        return ($errors ?? new ErrorResponder(false, $this->logger))->respond($exception)->prepare($request);
     }
 }

@@ -19,7 +19,7 @@ class QueryPathValidator
     {
         if ($basePath !== '') {
             try {
-                if ($basePath === '/' || str_ends_with($basePath, '/') || str_contains($basePath, '?') || str_contains($basePath, '#') || $this->decode($basePath) !== $basePath) {
+                if ($basePath === '/' || str_ends_with($basePath, '/') || str_contains($basePath, '?') || str_contains($basePath, '#') || self::decode($basePath) !== $basePath) {
                     throw new InvalidArgumentException('base_path must be an unencoded absolute path without a trailing slash.');
                 }
             } catch (HttpException $exception) {
@@ -30,7 +30,7 @@ class QueryPathValidator
 
     public function path(Request $request): string
     {
-        $path = $this->decode(explode('?', $request->getRequestUri(), 2)[0]);
+        $path = self::decode(explode('?', $request->getRequestUri(), 2)[0]);
 
         if ($this->basePath !== '') {
             if ($path !== $this->basePath && ! str_starts_with($path, "{$this->basePath}/")) {
@@ -43,7 +43,7 @@ class QueryPathValidator
         return $path === '' ? '/' : $path;
     }
 
-    private function decode(string $raw): string
+    public static function decode(string $raw): string
     {
         if (! str_starts_with($raw, '/') || preg_match('/%(?![a-f0-9]{2})|%(?:2f|5c)/i', $raw)) {
             throw new HttpException(HttpStatusCode::BAD_REQUEST, 'Invalid path.');
