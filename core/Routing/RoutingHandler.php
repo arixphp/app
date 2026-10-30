@@ -8,6 +8,7 @@ use Arix\Constants\HttpStatusCode;
 use Arix\Container\Container;
 use Arix\Contracts\RequestHandler;
 use Arix\Http\MiddlewareDispatcher;
+use Arix\Http\RequestAttributes;
 use Arix\HttpFoundation\Request;
 use Arix\HttpFoundation\Response;
 use LogicException;
@@ -26,13 +27,13 @@ class RoutingHandler implements RequestHandler
 
     public function handle(Request $request, Container $container): Response
     {
-        $path = $request->attributes->get('_arix_path');
+        $path = $request->attributes->get(RequestAttributes::PATH);
 
         if (! is_string($path)) {
             throw new LogicException('Routing requires the path validated by Kernel.');
         }
 
-        $previous = $request->attributes->get('_arix_route_parameters', []);
+        $previous = $request->attributes->get(RequestAttributes::ROUTE_PARAMETERS, []);
 
         if (! is_array($previous) || ! array_is_list($previous)) {
             throw new LogicException('Invalid internal route parameter state.');
@@ -48,7 +49,7 @@ class RoutingHandler implements RequestHandler
             $request->attributes->remove($name);
         }
 
-        $request->attributes->set('_arix_route_parameters', []);
+        $request->attributes->set(RequestAttributes::ROUTE_PARAMETERS, []);
         $registry = $container->get(RouteRegistry::class);
 
         if (! $registry instanceof RouteRegistry) {
@@ -65,7 +66,7 @@ class RoutingHandler implements RequestHandler
             $request->attributes->set($name, $value);
         }
 
-        $request->attributes->set('_arix_route_parameters', array_keys($match->parameters));
+        $request->attributes->set(RequestAttributes::ROUTE_PARAMETERS, array_keys($match->parameters));
 
         return (new MiddlewareDispatcher())->dispatch(
             $request,

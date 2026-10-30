@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-namespace Arix\Support;
+namespace Arix\Assets;
 
-use Arix\Assets\AssetLocator;
 use InvalidArgumentException;
 
 class AssetVersioner

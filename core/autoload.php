@@ -2,7 +2,8 @@
 
 declare(strict_types=1);
 
-use Arix\Support\ApplicationAutoloader;
+use Arix\Autoload\AutoloadConfiguration;
+use Arix\Autoload\ClassLoader;
 
 if (PHP_VERSION_ID < 80401) {
     throw new RuntimeException('Arix core requires PHP >= 8.4.1.');
@@ -12,25 +13,10 @@ if (! extension_loaded('mbstring')) {
     throw new RuntimeException('Arix core requires ext-mbstring.');
 }
 
-spl_autoload_register(static function (string $class): void {
-    if (! str_starts_with($class, 'Arix\\')) {
-        return;
-    }
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'Autoload' . DIRECTORY_SEPARATOR . 'AutoloadConfiguration.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'Autoload' . DIRECTORY_SEPARATOR . 'ClassLoader.php';
 
-    $relative = substr($class, 5);
+$classLoader = new ClassLoader(AutoloadConfiguration::read(dirname(__DIR__)));
+$classLoader->register();
 
-    if (! preg_match('/^[A-Za-z_][A-Za-z0-9_]*(?:\\\\[A-Za-z_][A-Za-z0-9_]*)*$/D', $relative)) {
-        return;
-    }
-
-    $file = __DIR__ . '/' . str_replace('\\', '/', $relative) . '.php';
-
-    if (is_file($file)) {
-        require_once $file;
-    }
-});
-
-require_once __DIR__ . '/functions.php';
-require_once __DIR__ . DIRECTORY_SEPARATOR . 'FastRoute' . DIRECTORY_SEPARATOR . 'functions.php';
-
-ApplicationAutoloader::register(dirname(__DIR__));
+return $classLoader;

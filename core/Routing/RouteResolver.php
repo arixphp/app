@@ -8,7 +8,6 @@ use Arix\Config\ConfigServices;
 use Arix\Container\Container;
 use Arix\Container\ContainerContext;
 use Arix\Runtime\Environment;
-use Arix\Support\ApplicationAutoloader;
 use Arix\Support\RuntimePaths;
 use LogicException;
 use RuntimeException;
@@ -21,7 +20,7 @@ class RouteResolver
     {
         $paths = RuntimePaths::fromApplicationRoot($root);
 
-        return Environment::run($paths->root, static fn (): RouteUrlGenerator => ApplicationAutoloader::run($paths->root, static fn (): RouteUrlGenerator => self::load($paths)));
+        return Environment::run($paths->root, static fn (): RouteUrlGenerator => self::load($paths));
     }
 
     private static function load(RuntimePaths $paths): RouteUrlGenerator

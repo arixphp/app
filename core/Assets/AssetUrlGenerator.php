@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Arix\Assets;
 
 use Arix\Routing\UrlGenerator;
-use Arix\Support\AssetVersioner;
 
 class AssetUrlGenerator
 {

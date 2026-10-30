@@ -11,7 +11,6 @@ use Arix\Container\ContainerContext;
 use Arix\Contracts\RequestHandler;
 use Arix\HttpFoundation\Request;
 use Arix\HttpFoundation\Response;
-use Arix\Support\ApplicationAutoloader;
 use Arix\Views\ErrorViewRenderer;
 use Closure;
 use Throwable;
@@ -31,7 +30,6 @@ class Kernel
         int $maxBodyBytes = 1048576,
         null|Closure $logger = null,
         private readonly array $middleware = [],
-        private readonly string|null $applicationRoot = null,
     ) {
         $this->requests = new RequestFactory($maxBodyBytes);
         $this->errors = new ErrorResponder($debug, $logger);
@@ -45,9 +43,7 @@ class Kernel
     public function handle(Request $request): Response
     {
 
-        return $this->applicationRoot === null
-            ? $this->dispatch($request)
-            : ApplicationAutoloader::run($this->applicationRoot, fn (): Response => $this->dispatch($request));
+        return $this->dispatch($request);
     }
 
     private function dispatch(Request $request): Response
@@ -64,8 +60,8 @@ class Kernel
                 $this->requests->capture($request);
 
                 $context = RequestUrlContext::fromRequest($request);
-                $request->attributes->set('_arix_url_context', $context);
-                $request->attributes->set('_arix_path', $context->path);
+                $request->attributes->set(RequestAttributes::URL_CONTEXT, $context);
+                $request->attributes->set(RequestAttributes::PATH, $context->path);
                 $container->instance(Request::class, $request);
 
                 if ($this->configure !== null) {

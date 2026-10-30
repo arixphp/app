@@ -6,7 +6,6 @@ namespace Arix\Assets;
 
 use Arix\Container\Container;
 use Arix\Routing\UrlGenerator;
-use Arix\Support\AssetVersioner;
 
 class AssetServices
 {

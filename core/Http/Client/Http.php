@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Arix\Http\Client;
 
 use Arix\Constants\HttpMethod;
+use Arix\Constants\HttpStatusCode;
 use CurlHandle;
 use InvalidArgumentException;
 use JsonException;
@@ -246,8 +247,15 @@ class Http
         for ($hop = 0; $hop <= $this->redirects; $hop++) {
             $response = $this->send($method, $current, $headers, $body);
             $location = $response->header('location');
+            $redirects = [
+                HttpStatusCode::REDIRECT_MOVED_PERMANENTLY->value,
+                HttpStatusCode::REDIRECT_FOUND->value,
+                HttpStatusCode::REDIRECT_SEE_OTHER->value,
+                HttpStatusCode::REDIRECT_TEMPORARY->value,
+                HttpStatusCode::REDIRECT_PERMANENT->value,
+            ];
 
-            if ($location === null || $hop === $this->redirects) {
+            if ($location === null || $hop === $this->redirects || ! in_array($response->status(), $redirects, true)) {
                 return $response;
             }
 
@@ -287,6 +295,10 @@ class Http
             throw new HttpClientException('The response contained an empty redirect location.');
         }
 
+        if (str_starts_with($location, '//')) {
+            throw new HttpClientException('The redirect location is not supported.');
+        }
+
         if (str_starts_with($location, '/')) {
             $parts = parse_url($current);
 
@@ -303,7 +315,7 @@ class Http
             return $this->normalize($location);
         }
 
-        return $this->normalize($current);
+        throw new HttpClientException('The redirect location is not supported.');
     }
 
     /**

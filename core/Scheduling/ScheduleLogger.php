@@ -21,13 +21,14 @@ class ScheduleLogger
     public function __construct(
         private readonly string $path,
         private readonly string $directory,
+        private readonly ScheduleReportFormatter $formatter = new ScheduleReportFormatter(),
     ) {}
 
     public function write(ScheduleReport $report, DateTimeImmutable $now): void
     {
         $stamp = $now->format('Y-m-d H:i:s T');
-        $lines = $report->lines();
-        $lines[] = $report->summary();
+        $lines = $this->formatter->lines($report);
+        $lines[] = $this->formatter->summary($report);
 
         foreach ($lines as $line) {
             $this->append(sprintf('[%s] %s', $stamp, trim($line)));
