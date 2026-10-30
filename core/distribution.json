@@ -7,7 +7,7 @@
     ],
     "files": {
         ".htaccess": "b839261c1ee52349560b726218f0bc9cb1afee95e07e9d50f95919d5e8e6cdf2",
-        "Application.php": "d3013398a041e03a26c7ada845a75159c80db8a3d53991201148d2ddc1efc726",
+        "Application.php": "9e724ff397abaf44137c1f5a5b05b6cf1824ba2ddc45e1aef99af6a1d764eb9b",
         "ApplicationBuilder.php": "71fad14f8ed4ece4f0d7c8df49e90e035819c7b265677c15fd20809be073d56b",
         "Assets/AssetLocator.php": "084b6dbaf7d5acacb7ebb3d5864a2dbe108898c3f2c7cfb7634ce919b63c6609",
         "Assets/AssetPolicy.php": "4f4fc036d0d0c0404cb1d4addd497cdf555a3ab6ae66e690da53f66b7973de57",
@@ -203,6 +203,10 @@
         "HttpFoundation/UriSigner.php": "52aeb82b2c461e60286c9923db3ed85d5ce45ecc95039c239957a96490da198b",
         "HttpFoundation/UrlHelper.php": "e70932973c3d56c1533bc790cad26d4c65c164965a77828f2fcfeb894645fac9",
         "Localization/Translator.php": "c9d8e2ad08c2f52f75fda9d285d99761fb6e1fbcdb1a13d3f6b948a08db0a49c",
+        "Markdown/DocumentReader.php": "c4b0fcd5d3451ee2ea70a1eb97c112d853071241f38540e5281dff32b7d69cde",
+        "Markdown/Markdown.php": "17e35f37b35fcbeeeff21e34896c1305165c31ea468a94238ab7fcd009550322",
+        "Parsedown/LICENSE": "d76b34cb4a026e7d8f9e13e2c4e56e985bff8749659c90456d13bea99713a1bc",
+        "Parsedown/Parsedown.php": "b8c1fa48b8c1417d02552a6bd6263719022acb96b8fabeaa1f30016fd52f7333",
         "Routing/ApplicationUrl.php": "28482ebfdb66872d3ffbb483bdcd6f30f8c97e1622d6b64338764a46e8826523",
         "Routing/ControllerDispatcher.php": "d6f68ac7684b3f6ffabbd6e4daa6d2d524701bce376c6e0d790dca71791d7565",
         "Routing/RouteDefinition.php": "00a888d484062a7e6b35cb1aa5d46dc0d64834dfd250b6f64525eab46a21260a",
@@ -257,8 +261,8 @@
         "autoload.php": "13e442082757ce9f6d9d5ff11edd2156b461b874e86d8e4489cd59d69ed12b02",
         "cron.php": "5f19878032c8fc258b189c6262e184c9e815a52b635fe4f2253e081e4111ceea",
         "functions.php": "6dd0c1d5025428d26f94adc804f4f91f2db5ca7139dfb495efb735e8c0eb0f23",
-        "imports.json": "8c2ad9a1aed5b2c8445e6d5b6ff8e61db9fb5ea15a56a26a94b3cc2a4dc19a36",
+        "imports.json": "c1466224349b2b549b709f87fd0a6ba0ad12b9bc70e78373426b8b7e646dc2f7",
         "stubs/error.html": "e83a401a6856aa86eb6483c6a31249b57d945594228ec9c5a594f68c67b09fe1"
     },
-    "id": "50e2a298b11bac19ec5a317087660d1e1b9b5b89cd2d77abdd20c7d5271fd10a"
+    "id": "24102339f30d88d2a11dfe0850a95532d5171f2d092c15d4dacb6ebe0e65b983"
 }

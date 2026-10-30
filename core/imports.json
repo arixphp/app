@@ -21,6 +21,11 @@
             "version": "v3.6.1",
             "destination": "Cron",
             "namespace": "Arix\\Cron"
+        },
+        "erusev/parsedown": {
+            "version": "1.8.0",
+            "destination": "Parsedown",
+            "namespace": "Arix\\Parsedown"
         }
     },
     "files": {
@@ -175,6 +180,8 @@
         "HttpFoundation/Test/Constraint/ResponseStatusCodeSame.php": "99d97a94e2dc02fce477831e083f343cc521894694ab71cef15ad5f1d5b66fe3",
         "HttpFoundation/Test/Constraint/SessionHasFlashMessage.php": "9137255529a2f818853b76c4eba39990b6b6171603ae7c165129e5d3d457033f",
         "HttpFoundation/UriSigner.php": "52aeb82b2c461e60286c9923db3ed85d5ce45ecc95039c239957a96490da198b",
-        "HttpFoundation/UrlHelper.php": "e70932973c3d56c1533bc790cad26d4c65c164965a77828f2fcfeb894645fac9"
+        "HttpFoundation/UrlHelper.php": "e70932973c3d56c1533bc790cad26d4c65c164965a77828f2fcfeb894645fac9",
+        "Parsedown/LICENSE": "d76b34cb4a026e7d8f9e13e2c4e56e985bff8749659c90456d13bea99713a1bc",
+        "Parsedown/Parsedown.php": "b8c1fa48b8c1417d02552a6bd6263719022acb96b8fabeaa1f30016fd52f7333"
     }
 }

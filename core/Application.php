@@ -15,6 +15,8 @@ use Arix\Http\RequestAttributes;
 use Arix\Http\RequestUrlContext;
 use Arix\HttpFoundation\Request;
 use Arix\HttpFoundation\Response;
+use Arix\Markdown\DocumentReader;
+use Arix\Markdown\Markdown;
 use Arix\Routing\ApplicationUrl;
 use Arix\Routing\RouteRegistry;
 use Arix\Routing\RouteResolver;
@@ -284,6 +286,7 @@ class Application
         }
 
         AssetServices::register($container, $this->root, UrlGenerator::fromRequest($request, $context), UrlGenerator::fromRequest($request, $context, assets: true));
+
         $cache = ['version' => $config->get('cache.version', '1')];
         $cacheConfiguration = $config->get('cache', []);
 
@@ -299,7 +302,11 @@ class Application
         ]);
 
         $storage = RuntimePaths::fromStrictRoot($this->root)->storageDirectory();
+
         StorageServices::register($container, Path::join($storage, 'app'));
+
+        $container->instance(Markdown::class, new Markdown());
+        $container->instance(DocumentReader::class, new DocumentReader(Path::join($this->root, 'app', 'content')));
 
         if ($routes) {
             require $this->routesFile();
