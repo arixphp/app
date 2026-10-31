@@ -305,8 +305,9 @@ class Application
 
         StorageServices::register($container, Path::join($storage, 'app'));
 
-        $container->instance(Markdown::class, new Markdown());
-        $container->instance(DocumentReader::class, new DocumentReader(Path::join($this->root, 'app', 'content')));
+        $reader = new DocumentReader(Path::join($this->root, 'app', 'content'));
+        $container->instance(DocumentReader::class, $reader);
+        $container->instance(Markdown::class, new Markdown($reader));
 
         if ($routes) {
             require $this->routesFile();

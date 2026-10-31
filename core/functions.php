@@ -37,6 +37,15 @@ if (! function_exists('trigger_deprecation')) {
     }
 }
 
+if (! function_exists('app')) {
+    function app(string|null $id = null): object
+    {
+        $container = ContainerContext::current();
+
+        return $id === null ? $container : $container->get($id);
+    }
+}
+
 if (! function_exists('view')) {
     function view(string $name, array $data = []): View
     {
