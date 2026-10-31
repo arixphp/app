@@ -20,22 +20,6 @@ class TemplateResolver
             throw new RuntimeException("Invalid template name: {$name}");
         }
 
-        $ancestor = $this->directory;
-
-        while (true) {
-            if (is_link($ancestor)) {
-                throw new RuntimeException('Template directory is linked.');
-            }
-
-            $parent = dirname($ancestor);
-
-            if ($parent === $ancestor) {
-                break;
-            }
-
-            $ancestor = $parent;
-        }
-
         $base = realpath($this->directory);
 
         if ($base === false || ! is_dir($base)) {
@@ -71,10 +55,6 @@ class TemplateResolver
 
             $candidate = $path . DIRECTORY_SEPARATOR . $filename;
 
-            if (is_link($candidate)) {
-                throw new RuntimeException("Template symlinks are not supported: {$name}");
-            }
-
             $file = realpath($candidate);
 
             if ($file !== false && is_file($file) && str_starts_with($file, $base . DIRECTORY_SEPARATOR)) {
@@ -96,10 +76,6 @@ class TemplateResolver
         }
 
         $child = $path . DIRECTORY_SEPARATOR . $segment;
-
-        if (is_link($child)) {
-            throw new RuntimeException("Template symlinks are not supported: {$segment}");
-        }
 
         return $child;
     }

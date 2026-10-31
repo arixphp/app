@@ -24,22 +24,6 @@ class Storage
 
     public function __construct(string $root)
     {
-        $ancestor = $root;
-
-        while (true) {
-            if (is_link($ancestor)) {
-                throw new InvalidArgumentException('Linked storage roots are not allowed.');
-            }
-
-            $parent = dirname($ancestor);
-
-            if ($parent === $ancestor) {
-                break;
-            }
-
-            $ancestor = $parent;
-        }
-
         $real = realpath($root);
 
         if ($real === false || ! is_dir($real)) {

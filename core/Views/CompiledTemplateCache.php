@@ -15,22 +15,6 @@ class CompiledTemplateCache
 
     public function __construct(string $directory, private readonly string $version)
     {
-        $ancestor = $directory;
-
-        while (true) {
-            if (is_link($ancestor)) {
-                throw new RuntimeException('Compiled template directory is linked.');
-            }
-
-            $parent = dirname($ancestor);
-
-            if ($parent === $ancestor) {
-                break;
-            }
-
-            $ancestor = $parent;
-        }
-
         $real = realpath($directory);
 
         if ($real === false || ! is_dir($real) || ! is_writable($real)) {
