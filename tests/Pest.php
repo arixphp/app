@@ -2,6 +2,6 @@
 
 declare(strict_types=1);
 
-use Arix\Testing\TestCase;
+use Tests\TestCase;
 
 uses(TestCase::class)->in(__DIR__ . DIRECTORY_SEPARATOR . 'Feature');
