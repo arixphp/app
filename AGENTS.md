@@ -49,9 +49,13 @@ Run every command from the application root.
 syntax (`it()`/`test()` and `expect()`). The framework's own test suite lives in the CLI
 project and is not part of this application. `tests/autoload.php` loads the local core and the
 application and test classes without Composer or the HTTP entry point. `tests/Pest.php` binds
-the framework `Arix\Testing\TestCase`, so `$this->get('/path')` dispatches in-process and
-returns an `Arix\Testing\TestResponse` with chainable `assertStatus()`, `assertOk()`, and
-`assertSee()` assertions. Run the suite through the CLI; do not reintroduce `tests/run.php` or
+the local `Tests\TestCase`, which extends `Arix\Testing\TestCase`. Each HTTP request loads
+`app/bootstrap.php` and its middleware inside `Environment::run()`, restoring the environment
+afterwards. `$this->get('/path')` dispatches in-process and returns an
+`Arix\Testing\TestResponse` with chainable `assertStatus()`, `assertOk()`, and `assertSee()`
+assertions. `assertStatus()` accepts an `Arix\Constants\HttpStatusCode` case, not an integer.
+These tests do not exercise the HTTP runtime or web-server configuration.
+Run the suite through the CLI; do not reintroduce `tests/run.php` or
 install Pest in the application. XML and tests are trusted developer code, not a sandbox.
 `phpunit.xml` and `phpunit.xml.dist` must stay protected in Apache, Caddy and IIS.
 
