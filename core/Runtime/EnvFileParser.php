@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Arix\Runtime;
 
 use Arix\Exceptions\CoreRuntimeException;
-use Arix\Support\Path;
 use SensitiveParameter;
 
 use function strlen;
@@ -24,8 +23,8 @@ class EnvFileParser
      */
     public function parse(): array
     {
-        if (Path::isLink($this->filePath) || ! is_file($this->filePath) || ! is_readable($this->filePath)) {
-            throw new CoreRuntimeException('The environment file must be a readable regular file, not a symbolic link.');
+        if (! is_file($this->filePath) || ! is_readable($this->filePath)) {
+            throw new CoreRuntimeException('The environment file must be a readable regular file.');
         }
 
         set_error_handler(static function (): never {

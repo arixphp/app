@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Arix\Config;
 
-use Arix\Support\RuntimePaths;
 use InvalidArgumentException;
 use RuntimeException;
 use Throwable;
@@ -21,9 +20,12 @@ class Loader
             throw new RuntimeException("Configuration directory is not readable: {$directory}");
         }
 
-        $paths = RuntimePaths::fromOptionalStrictRoot($directory);
+        if (! file_exists($directory)) {
+            $parent = dirname($directory);
 
-        if ($paths === null) {
+            if (PHP_OS_FAMILY !== 'Windows' && is_dir($parent) && ! is_executable($parent)) {
+                throw new RuntimeException("Configuration directory is not accessible: {$directory}");
+            }
 
             return new Repository([]);
         }
@@ -32,7 +34,7 @@ class Loader
             throw new RuntimeException("Configuration directory is not readable: {$directory}");
         }
 
-        $files = scandir($paths->root);
+        $files = scandir($directory);
 
         if ($files === false) {
             throw new RuntimeException("Cannot list configuration directory: {$directory}");
@@ -45,9 +47,9 @@ class Loader
                 continue;
             }
 
-            $file = $paths->resolve([$name]);
+            $file = rtrim($directory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $name;
 
-            if ($file === null || ! is_file($file)) {
+            if (! is_file($file)) {
                 continue;
             }
 

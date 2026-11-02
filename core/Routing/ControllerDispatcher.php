@@ -7,7 +7,6 @@ namespace Arix\Routing;
 use Arix\Container\Container;
 use Arix\HttpFoundation\Request;
 use Arix\HttpFoundation\Response;
-use Arix\Support\Path;
 use Arix\Views\Contracts\View as ViewContract;
 use Arix\Views\TemplateEngine;
 use ReflectionClass;
@@ -131,16 +130,13 @@ class ControllerDispatcher
             throw new RuntimeException('Invalid application controller class.');
         }
 
-        // Check ancestors before realpath can hide a linked directory.
-        $this->assertUnlinkedAncestors($this->directory);
-
         $base = realpath($this->directory);
 
         if ($base === false || ! is_dir($base)) {
             throw new RuntimeException('Controller directory is missing.');
         }
 
-        if (! Path::hasExactCase($this->directory)) {
+        if (! in_array(basename($this->directory), scandir(dirname($this->directory)) ?: [], true)) {
             throw new RuntimeException('Controller directory must match its configured case exactly.');
         }
 
@@ -151,25 +147,6 @@ class ControllerDispatcher
         }
 
         return $file;
-    }
-
-    private function assertUnlinkedAncestors(string $directory): void
-    {
-        $ancestor = $directory;
-
-        while (true) {
-            if (Path::isLink($ancestor)) {
-                throw new RuntimeException('Controller directory is linked.');
-            }
-
-            $parent = dirname($ancestor);
-
-            if ($parent === $ancestor) {
-                return;
-            }
-
-            $ancestor = $parent;
-        }
     }
 
     /** @param list<string> $segments */
@@ -185,9 +162,6 @@ class ControllerDispatcher
 
             $path .= DIRECTORY_SEPARATOR . $segment;
 
-            if (Path::isLink($path)) {
-                throw new RuntimeException('Controller symlinks are not supported.');
-            }
         }
 
         $file = realpath($path);

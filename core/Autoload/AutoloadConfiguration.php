@@ -136,9 +136,7 @@ class AutoloadConfiguration
 
     protected function configFileIsValid(): bool
     {
-        return ! is_link($this->filePath)
-            && in_array('.arix.json', @scandir(dirname($this->filePath)) ?: [], true)
-            && is_file($this->filePath)
+        return is_file($this->filePath)
             && is_readable($this->filePath);
     }
 

@@ -6,8 +6,10 @@ namespace Arix;
 
 use Arix\Assets\AssetServices;
 use Arix\Config\ConfigServices;
+use Arix\Config\Loader;
 use Arix\Config\Repository;
 use Arix\Container\Container;
+use Arix\Container\ContainerContext;
 use Arix\Contracts\RequestHandler;
 use Arix\Http\Kernel;
 use Arix\Http\MiddlewareResolver;
@@ -19,7 +21,6 @@ use Arix\Markdown\DocumentReader;
 use Arix\Markdown\Markdown;
 use Arix\Routing\ApplicationUrl;
 use Arix\Routing\RouteRegistry;
-use Arix\Routing\RouteResolver;
 use Arix\Routing\RouteUrlGenerator;
 use Arix\Routing\RoutingHandler;
 use Arix\Routing\UrlGenerator;
@@ -45,26 +46,27 @@ class Application
 {
     private function __construct(
         private readonly string $root,
-        private readonly string $configDirectory,
+        private readonly RuntimePaths $paths,
         private readonly string $controllerDirectory,
         private readonly string $viewsDirectory,
         private readonly string $languageDirectory,
-        private readonly Repository $defaults
+        private readonly Repository $defaults,
+        private readonly Closure|null $services,
     ) {}
 
     public static function create(string $root): self
     {
-        return self::load(RuntimePaths::fromApplicationRoot($root)->root, requireRoutes: true);
+        return self::load(RuntimePaths::fromApplicationRoot($root), requireRoutes: true);
     }
 
     public static function createForScheduling(string $root): self
     {
-        return self::load(RuntimePaths::fromApplicationRoot($root)->root, requireRoutes: false);
+        return self::load(RuntimePaths::fromApplicationRoot($root), requireRoutes: false);
     }
 
-    private static function load(string $base, bool $requireRoutes): self
+    private static function load(RuntimePaths $paths, bool $requireRoutes): self
     {
-        $paths = RuntimePaths::fromStrictRoot($base);
+        $base = $paths->root;
 
         $configDirectory = $paths->resolve(['app', 'config'])
             ?? throw new RuntimeException('Application configuration is missing.');
@@ -85,17 +87,16 @@ class Application
         $defaults = ConfigServices::register(new Container(), $configDirectory);
         $servicesFile = $paths->resolve(['app', 'services.php']);
 
-        if ($servicesFile !== null && is_file($servicesFile)) {
-            self::servicesClosure($servicesFile);
-        }
+        $services = $servicesFile !== null && is_file($servicesFile) ? self::servicesClosure($servicesFile) : null;
 
         return new self(
             $base,
-            $configDirectory,
+            $paths,
             Path::join($base, 'app', 'Controllers'),
             Path::join($base, 'app', 'views'),
             Path::join($base, 'app', 'lang'),
             $defaults,
+            $services,
         );
     }
 
@@ -153,7 +154,17 @@ class Application
             Request::setTrustedHosts([]);
             $this->registerPresentation($container, routes: false);
             // Schedules need named URLs, but route registration remains lazy.
-            $container->singleton(RouteUrlGenerator::class, fn (): RouteUrlGenerator => RouteResolver::fromRoot($this->root));
+            $container->singleton(RouteUrlGenerator::class, function (Container $container): RouteUrlGenerator {
+                $routes = $this->routesFile();
+                ContainerContext::run($container, static function () use ($routes): void {
+                    require $routes;
+                });
+                $registry = $container->get(RouteRegistry::class);
+                $config = $container->get(Repository::class);
+                $url = ApplicationUrl::fromConfiguration($config->get('app', []));
+
+                return new RouteUrlGenerator($registry, UrlGenerator::fromApplicationUrl($url->url));
+            });
         } finally {
             Request::setTrustedHosts($trustedHosts);
         }
@@ -173,26 +184,22 @@ class Application
         $schedule = new Schedule(is_string($timezone) ? $timezone : 'UTC');
         $this->schedules($schedule);
         $lock = new FileScheduleLock($container->get(Storage::class));
-        $paths = RuntimePaths::fromStrictRoot($this->root);
+        $logDirectory = $this->paths->scheduleLogDirectory();
 
         return new ScheduleKernel(
             $schedule,
             $lock,
             $grace,
-            new ScheduleLogger($paths->scheduleLogPath(), $paths->scheduleLogDirectory()),
+            new ScheduleLogger(Path::join($logDirectory, 'cron.log'), $logDirectory),
         );
     }
 
     private function registerSchedules(Schedule $schedule): void
     {
-        $file = RuntimePaths::fromStrictRoot($this->root)->resolve(['app', 'schedules.php']);
+        $file = $this->paths->resolve(['app', 'schedules.php']);
 
         if ($file === null || ! is_file($file)) {
             return;
-        }
-
-        if (is_link($file)) {
-            throw new RuntimeException("Application schedules are linked: {$file}");
         }
 
         $register = require $file;
@@ -206,16 +213,14 @@ class Application
 
     private function register(Container $container): void
     {
-        $paths = RuntimePaths::fromStrictRoot($this->root);
-        $configDirectory = $paths->resolve(['app', 'config'])
-            ?? throw new RuntimeException("Application configuration is missing: {$this->configDirectory}");
-        $config = ConfigServices::register($container, $configDirectory);
-        $servicesFile = $paths->resolve(['app', 'services.php']);
+        $config = $this->defaults;
+        $container->singleton(Loader::class, static fn (): Loader => new Loader());
+        $container->instance(Repository::class, $config);
         $container->instance(RouteRegistry::class, new RouteRegistry());
         $container->instance(MiddlewareResolver::class, new MiddlewareResolver(Path::join($this->root, 'app', 'Middleware')));
 
-        if ($servicesFile !== null && is_file($servicesFile)) {
-            self::servicesClosure($servicesFile)($container);
+        if ($this->services !== null) {
+            ($this->services)($container);
         }
 
         $app = $config->get('app');
@@ -301,7 +306,7 @@ class Application
             'lang' => $this->languageDirectory,
         ]);
 
-        $storage = RuntimePaths::fromStrictRoot($this->root)->storageDirectory();
+        $storage = $this->paths->storageDirectory();
 
         StorageServices::register($container, Path::join($storage, 'app'));
 
@@ -310,13 +315,17 @@ class Application
         $container->instance(Markdown::class, new Markdown($reader));
 
         if ($routes) {
+            $container->singleton(RouteUrlGenerator::class, static fn (Container $container): RouteUrlGenerator => new RouteUrlGenerator(
+                $container->get(RouteRegistry::class),
+                $container->get(UrlGenerator::class),
+            ));
             require $this->routesFile();
         }
     }
 
     private function routesFile(): string
     {
-        $file = RuntimePaths::fromStrictRoot($this->root)->resolve(['app', 'routes.php'])
+        $file = $this->paths->resolve(['app', 'routes.php'])
             ?? throw new RuntimeException('Application routes are missing.');
 
         if (! is_file($file) || ! is_readable($file)) {
@@ -328,10 +337,6 @@ class Application
 
     private static function servicesClosure(string $file): Closure
     {
-        if (is_link($file)) {
-            throw new RuntimeException("Application services are linked: {$file}");
-        }
-
         if (! is_file($file) || ! is_readable($file)) {
             throw new RuntimeException("Application services are missing: {$file}");
         }

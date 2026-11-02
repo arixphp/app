@@ -41,18 +41,16 @@ class HttpRuntime
         $errors = null;
 
         try {
-            $execute = function () use ($bootstrap, &$errors): Response {
-                $errors = new ErrorResponder(Environment::debug(), $this->logger);
-                $kernel = $bootstrap();
+            Environment::load($this->applicationRoot);
 
-                if (! $kernel instanceof Kernel) {
-                    throw new RuntimeException('Application bootstrap must return a Arix\\Http\\Kernel.');
-                }
+            $errors = new ErrorResponder(Environment::debug(), $this->logger);
+            $kernel = $bootstrap();
 
-                return $kernel->handle($kernel->requestFactory()->fromGlobals());
-            };
+            if (! $kernel instanceof Kernel) {
+                throw new RuntimeException('Application bootstrap must return a Arix\\Http\\Kernel.');
+            }
 
-            return Environment::run($this->applicationRoot, $execute);
+            return $kernel->handle($kernel->requestFactory()->fromGlobals());
         } catch (Throwable $exception) {
 
             return $this->failure($exception, $errors);

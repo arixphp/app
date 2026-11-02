@@ -17,11 +17,9 @@ class TestResponse
         $this->content = (string) $response->getContent();
     }
 
-    public function assertStatus(HttpStatusCode|int $status): static
+    public function assertStatus(HttpStatusCode $status): static
     {
-        $expected = $status instanceof HttpStatusCode ? $status->value : HttpStatusCode::tryFrom($status)?->value ?? $status;
-
-        Assert::assertSame($expected, $this->response->getStatusCode());
+        Assert::assertSame($status->value, $this->response->getStatusCode());
 
         return $this;
     }

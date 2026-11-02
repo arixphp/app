@@ -4,31 +4,10 @@ declare(strict_types=1);
 
 namespace Arix\Support;
 
-use function in_array;
 use function is_array;
 
 class Path extends ForbidInstance
 {
-    public static function hasExactCase(string $path): bool
-    {
-        $parent = dirname($path);
-
-        while ($parent !== $path) {
-            if (! is_dir($parent)) {
-                return false;
-            }
-
-            if (! in_array(basename($path), scandir($parent) ?: [], true)) {
-                return false;
-            }
-
-            $path = $parent;
-            $parent = dirname($path);
-        }
-
-        return true;
-    }
-
     /**
      * Detects symbolic links and Windows junctions/reparse points.
      *

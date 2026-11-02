@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Arix\Localization;
 
 use Arix\Support\Arr;
-use Arix\Support\RuntimePaths;
 use InvalidArgumentException;
+use RuntimeException;
 
 use function in_array;
 use function is_array;
@@ -56,9 +56,15 @@ class Translator
     private function catalogue(string $locale): array
     {
         if (! isset($this->catalogues[$locale])) {
-            $file = RuntimePaths::fromOptionalStrictRoot($this->directory)?->resolve(["{$locale}.php"]);
+            $parent = dirname($this->directory);
 
-            $catalogue = $file !== null && is_file($file) ? require $file : [];
+            if (PHP_OS_FAMILY !== 'Windows' && ! is_dir($this->directory) && is_dir($parent) && ! is_executable($parent)) {
+                throw new RuntimeException('Translation directory is not accessible.');
+            }
+
+            $file = $this->directory . DIRECTORY_SEPARATOR . "{$locale}.php";
+
+            $catalogue = is_file($file) ? require $file : [];
 
             if (! is_array($catalogue)) {
                 throw new InvalidArgumentException("Translation catalogue for locale '{$locale}' must return an array.");

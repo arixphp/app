@@ -124,10 +124,6 @@ class ClassLoader
 
     private function resolveFile(string $relative): string|null
     {
-        if (! $this->rootIsValid()) {
-            throw new RuntimeException('Autoload root is missing, linked or changed.');
-        }
-
         $path = $this->root;
 
         foreach (explode('/', $relative) as $segment) {
@@ -152,23 +148,9 @@ class ClassLoader
 
             $path = rtrim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $segment;
 
-            if (! $this->pathIsValid($path)) {
-                throw new RuntimeException("Autoload path is linked or changed: {$relative}");
-            }
         }
 
         return is_file($path) && is_readable($path) ? $path : null;
-    }
-
-    private function rootIsValid(): bool
-    {
-        clearstatcache(true, $this->root);
-
-        $rootStat = @lstat($this->root);
-
-        return $rootStat !== false && ! is_link($this->root)
-            && ($rootStat['mode'] & 0xF000) === 0x4000
-            && realpath($this->root) === $this->root;
     }
 
     private function segmentIsValid(string $segment): bool
@@ -176,16 +158,5 @@ class ClassLoader
         return $segment !== '' && $segment !== '.' && $segment !== '..'
             && ! preg_match('~[\x00-\x1f\x7f\\\\:]~', $segment)
             && rtrim($segment, '. ') === $segment;
-    }
-
-    private function pathIsValid(string $path): bool
-    {
-        clearstatcache(true, $path);
-
-        $stat = @lstat($path);
-
-        return $stat !== false && ! is_link($path)
-            && realpath($path) === $path
-            && (($stat['mode'] & 0xF000) === 0x4000 || ($stat['mode'] & 0xF000) === 0x8000);
     }
 }

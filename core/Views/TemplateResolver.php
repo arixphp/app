@@ -12,7 +12,18 @@ use function is_array;
 
 class TemplateResolver
 {
-    public function __construct(private readonly string $directory) {}
+    private readonly string $directory;
+
+    public function __construct(string $directory)
+    {
+        $base = realpath($directory);
+
+        if ($base === false || ! is_dir($base)) {
+            throw new RuntimeException('Template directory is missing.');
+        }
+
+        $this->directory = $base;
+    }
 
     public function resolve(string $name): string
     {
@@ -20,11 +31,7 @@ class TemplateResolver
             throw new RuntimeException("Invalid template name: {$name}");
         }
 
-        $base = realpath($this->directory);
-
-        if ($base === false || ! is_dir($base)) {
-            throw new RuntimeException('Template directory is missing.');
-        }
+        $base = $this->directory;
 
         $segments = explode('.', $name);
         $leaf = array_pop($segments);
