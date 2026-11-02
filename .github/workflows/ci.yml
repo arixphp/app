@@ -32,14 +32,15 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Homebrew ships with the Ubuntu runner image but is not on PATH.
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
+          brew update
           brew tap arixphp/tap
           brew install arixphp/tap/arix
+
           echo "$(brew --prefix)/bin" >> "${GITHUB_PATH}"
 
-          version="$(arix --version | tr -d '\r' | tail -n 1)"
+          version="$(arix --version 2>/dev/null | tr -d '\r' | awk 'NF { print $NF; exit }')"
 
           if [ -z "${version}" ]; then
             echo "The installed Arix CLI did not report a version." >&2
