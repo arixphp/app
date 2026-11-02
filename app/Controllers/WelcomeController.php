@@ -10,7 +10,7 @@ class WelcomeController
 {
     public function index(): View
     {
-        return view('index', [
+        return view('welcome', [
             'title' => trans('home.title'),
             'description' => trans('home.description'),
         ]);
