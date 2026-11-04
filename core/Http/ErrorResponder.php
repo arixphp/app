@@ -36,43 +36,13 @@ class ErrorResponder
             $status = HttpStatusCode::INTERNAL_SERVER_ERROR;
             $diagnostics = $this->debug;
             $message = $this->debug ? $this->diagnostics($exception) : 'Internal server error.';
-            $log = "Arix: {$exception}";
-
-            try {
-                if ($this->logger !== null) {
-                    ($this->logger)($log);
-                } else {
-                    error_log($log);
-                }
-            } catch (Throwable $loggingException) {
-                try {
-                    @error_log("Arix logger failed: {$loggingException}\n{$log}");
-                } catch (Throwable) {
-                    // Logging is best-effort and must never prevent an HTTP error response.
-                }
-            }
+            $this->log($exception);
         }
 
         $html = null;
 
         if (! $diagnostics) {
-            $level = ob_get_level();
-
-            try {
-                if ($renderView !== null) {
-                    // Discard incidental output, including flushed template buffers.
-                    ob_start(static fn (string $output): string => '');
-                    $html = $renderView($status->value, $message);
-                }
-            } catch (Throwable) {
-                // A failed application view must never replace the original HTTP error.
-            } finally {
-                while (ob_get_level() > $level) {
-                    ob_end_clean();
-                }
-            }
-
-            $html ??= new ErrorPageRenderer()->render($status->value, $message);
+            $html = $this->render($status->value, $message, $renderView);
         }
 
         $response = new Response($html ?? $message, $status->value, $headers);
@@ -81,6 +51,48 @@ class ErrorResponder
         $response->headers->set('X-Content-Type-Options', 'nosniff');
 
         return $response;
+    }
+
+    private function log(Throwable $exception): void
+    {
+        $log = "Arix: {$exception}";
+
+        try {
+            if ($this->logger !== null) {
+                ($this->logger)($log);
+            } else {
+                error_log($log);
+            }
+        } catch (Throwable $loggingException) {
+            try {
+                @error_log("Arix logger failed: {$loggingException}\n{$log}");
+            } catch (Throwable) {
+                // Logging is best-effort and must never prevent an HTTP error response.
+            }
+        }
+    }
+
+    /** @param Closure(int, string): (string|null)|null $renderView */
+    private function render(int $status, string $message, Closure|null $renderView): string|null
+    {
+        $html = null;
+        $level = ob_get_level();
+
+        try {
+            if ($renderView !== null) {
+                // Discard incidental output, including flushed template buffers.
+                ob_start(static fn (string $output): string => '');
+                $html = $renderView($status, $message);
+            }
+        } catch (Throwable) {
+            // A failed application view must never replace the original HTTP error.
+        } finally {
+            while (ob_get_level() > $level) {
+                ob_end_clean();
+            }
+        }
+
+        return $html ?? new ErrorPageRenderer()->render($status, $message);
     }
 
     /**

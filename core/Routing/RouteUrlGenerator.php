@@ -50,59 +50,65 @@ class RouteUrlGenerator
             }
         }
 
-        $keys = array_keys($params);
-
         foreach ((new Std())->parse($pattern) as $variant) {
-            $placeholders = [];
-
-            foreach ($variant as $part) {
-                if (is_array($part)) {
-                    $placeholders[$part[0]] = $part[1];
-                }
+            if ($this->matchesVariant($variant, $params, $name)) {
+                return $this->buildPath($variant, $params);
             }
-
-            if (count($placeholders) !== count($params)) {
-                continue;
-            }
-
-            $missing = false;
-
-            foreach ($placeholders as $key => $regex) {
-                if (! in_array($key, $keys, true)) {
-                    $missing = true;
-
-                    break;
-                }
-
-                $value = (string) $params[$key];
-
-                if (! RouteParameter::isSafe($value)) {
-                    throw new InvalidArgumentException("Invalid parameter '{$key}' for route: {$name}");
-                }
-
-                if (@preg_match('~^(?:' . $regex . ')$~D', $value) !== 1) {
-                    throw new InvalidArgumentException("Invalid parameter '{$key}' for route: {$name}");
-                }
-            }
-
-            if ($missing) {
-                continue;
-            }
-
-            $path = '';
-
-            foreach ($variant as $part) {
-                if (is_string($part)) {
-                    $path .= $part;
-                } else {
-                    $path .= (string) $params[$part[0]];
-                }
-            }
-
-            return $path === '' ? '/' : $path;
         }
 
         throw new InvalidArgumentException("Invalid parameters for route: {$name}");
+    }
+
+    /** @param array<string, string|int> $params */
+    private function matchesVariant(array $variant, array $params, string $name): bool
+    {
+        $placeholders = [];
+
+        foreach ($variant as $part) {
+            if (is_array($part)) {
+                $placeholders[$part[0]] = $part[1];
+            }
+        }
+
+        if (count($placeholders) !== count($params)) {
+            return false;
+        }
+
+        $keys = array_keys($params);
+
+        foreach ($placeholders as $key => $regex) {
+            if (! in_array($key, $keys, true)) {
+                return false;
+            }
+
+            $value = (string) $params[$key];
+
+            if (! RouteParameter::isSafe($value)) {
+                throw new InvalidArgumentException("Invalid parameter '{$key}' for route: {$name}");
+            }
+
+            if (@preg_match('~^(?:' . $regex . ')$~D', $value) !== 1) {
+                throw new InvalidArgumentException("Invalid parameter '{$key}' for route: {$name}");
+            }
+        }
+
+        return true;
+    }
+
+    /** @param array<string, string|int> $params */
+    private function buildPath(array $variant, array $params): string
+    {
+        $path = '';
+
+        foreach ($variant as $part) {
+            if (is_string($part)) {
+                $path .= $part;
+            } else {
+                $path .= (string) $params[$part[0]];
+            }
+        }
+
+        return $path === '' ? '/' : $path;
     }
 
     private function relative(string $path): string

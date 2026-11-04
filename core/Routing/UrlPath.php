@@ -11,14 +11,12 @@ class UrlPath
     /** Encode decoded segments without interpreting escapes a second time. */
     public static function encode(string $decodedPath): string
     {
-
         return '/' . implode('/', array_map('rawurlencode', explode('/', trim($decodedPath, '/'))));
     }
 
     public static function validateMount(string $path): void
     {
         if ($path === '') {
-
             return;
         }
 
@@ -38,7 +36,6 @@ class UrlPath
         }
 
         foreach (explode('/', $path) as $segment) {
-
             if (str_starts_with($segment, '.')) {
                 throw new InvalidArgumentException('Invalid internal path.');
             }

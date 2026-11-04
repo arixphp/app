@@ -14,22 +14,6 @@ class AssetLocator
 
     public function __construct(string $root, private readonly AssetPolicy $policy)
     {
-        $ancestor = $root;
-
-        while (true) {
-            if (is_link($ancestor)) {
-                throw new InvalidArgumentException('Linked asset roots are not allowed.');
-            }
-
-            $parent = dirname($ancestor);
-
-            if ($parent === $ancestor) {
-                break;
-            }
-
-            $ancestor = $parent;
-        }
-
         $real = realpath($root);
 
         if ($real === false || ! is_dir($real)) {
@@ -51,8 +35,6 @@ class AssetLocator
             }
 
             $file .= DIRECTORY_SEPARATOR . $segment;
-
-            clearstatcache(true, $file);
 
             if (is_link($file) || realpath($file) !== $file) {
                 throw new InvalidArgumentException('Linked public assets are not allowed.');

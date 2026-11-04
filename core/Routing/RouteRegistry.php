@@ -87,6 +87,20 @@ class RouteRegistry
             throw new InvalidArgumentException('Route handler must identify an application controller and action.');
         }
 
+        $names = $this->normalizeMethods($methods);
+        $this->validatePath($path);
+
+        $route = new RouteDefinition($names, $path, $handler[0], $handler[1]);
+        // Build before publishing so a conflict cannot leave partial registration.
+        $this->collector([...$this->routes, $route])->getData();
+        $this->routes[] = $route;
+
+        return $route;
+    }
+
+    /** @param list<string> $methods @return list<string> */
+    private function normalizeMethods(array $methods): array
+    {
         if ($methods === [] || ! array_is_list($methods)) {
             throw new InvalidArgumentException('Route methods must be a nonempty list.');
         }
@@ -107,6 +121,11 @@ class RouteRegistry
             $names[] = $name;
         }
 
+        return $names;
+    }
+
+    private function validatePath(string $path): void
+    {
         foreach (new Std()->parse($path) as $variant) {
             foreach ($variant as $part) {
                 if (is_string($part) && (str_contains($part, '?') || str_contains($part, '#'))) {
@@ -125,12 +144,6 @@ class RouteRegistry
             }
         }
 
-        $route = new RouteDefinition($names, $path, $handler[0], $handler[1]);
-        // Build before publishing so a conflict cannot leave partial registration.
-        $this->collector([...$this->routes, $route])->getData();
-        $this->routes[] = $route;
-
-        return $route;
     }
 
     /**

@@ -75,7 +75,6 @@ class TemplateCacheMaintenance
     private function openLock(): mixed
     {
         $path = $this->directory . DIRECTORY_SEPARATOR . '.templates.lock';
-        clearstatcache(true, $path);
         $before = file_exists($path) || is_link($path) ? @lstat($path) : false;
 
         if ($before !== false && ! self::regular($before)) {
@@ -88,7 +87,6 @@ class TemplateCacheMaintenance
             throw new RuntimeException('Cannot open template cache lock.');
         }
 
-        clearstatcache(true, $path);
         $opened = fstat($handle);
         $current = @lstat($path);
 
@@ -152,7 +150,6 @@ class TemplateCacheMaintenance
                 }
 
                 $path = $this->directory . DIRECTORY_SEPARATOR . $name;
-                clearstatcache(true, $path);
                 $stat = @lstat($path);
 
                 if ($stat === false || ! self::regular($stat) || $stat['mtime'] >= $now - $this->policy->maxAge) {
@@ -160,7 +157,6 @@ class TemplateCacheMaintenance
                 }
 
                 // Recheck identity and age immediately before unlinking.
-                clearstatcache(true, $path);
                 $current = @lstat($path);
 
                 if ($current === false || ! self::regular($current)

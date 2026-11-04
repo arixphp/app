@@ -39,13 +39,44 @@ class ControllerDispatcher
             throw new RuntimeException("Controller class conflicts with its application file: {$route->controller}");
         }
 
-        if (! $class->hasMethod($route->action) || str_starts_with($route->action, '__')) {
-            throw new RuntimeException("Controller action does not exist: {$route->action}");
+        $acceptsRequest = $this->validateAction($class, $route->action);
+
+        $controller = $container->has($route->controller)
+            ? $container->get($route->controller)
+            : $this->defaultController($route->controller);
+
+        if (! $controller instanceof $route->controller) {
+            throw new RuntimeException('Controller binding returned an incompatible instance.');
         }
 
-        $method = $class->getMethod($route->action);
+        $result = $controller->{$route->action}(...($acceptsRequest ? [$request] : []));
 
-        if (! $method->isPublic() || $method->isStatic() || $method->getName() !== $route->action || $method->returnsReference()) {
+        if ($result instanceof Response) {
+            return $result;
+        }
+
+        if (! $result instanceof ViewContract) {
+            throw new RuntimeException('Controller action must return a Response or View.');
+        }
+
+        $engine = $container->get(TemplateEngine::class);
+
+        if (! $engine instanceof TemplateEngine) {
+            throw new RuntimeException('TemplateEngine binding returned an incompatible instance.');
+        }
+
+        return new Response($engine->render($result->name(), $result->data()), 200, ['Content-Type' => 'text/html; charset=UTF-8']);
+    }
+
+    private function validateAction(ReflectionClass $class, string $action): bool
+    {
+        if (! $class->hasMethod($action) || str_starts_with($action, '__')) {
+            throw new RuntimeException("Controller action does not exist: {$action}");
+        }
+
+        $method = $class->getMethod($action);
+
+        if (! $method->isPublic() || $method->isStatic() || $method->getName() !== $action || $method->returnsReference()) {
             throw new RuntimeException('Controller action must be a public instance method.');
         }
 
@@ -74,31 +105,7 @@ class ControllerDispatcher
             }
         }
 
-        $controller = $container->has($route->controller)
-            ? $container->get($route->controller)
-            : $this->defaultController($route->controller);
-
-        if (! $controller instanceof $route->controller) {
-            throw new RuntimeException('Controller binding returned an incompatible instance.');
-        }
-
-        $result = $controller->{$route->action}(...($parameters === [] ? [] : [$request]));
-
-        if ($result instanceof Response) {
-            return $result;
-        }
-
-        if (! $result instanceof ViewContract) {
-            throw new RuntimeException('Controller action must return a Response or View.');
-        }
-
-        $engine = $container->get(TemplateEngine::class);
-
-        if (! $engine instanceof TemplateEngine) {
-            throw new RuntimeException('TemplateEngine binding returned an incompatible instance.');
-        }
-
-        return new Response($engine->render($result->name(), $result->data()), 200, ['Content-Type' => 'text/html; charset=UTF-8']);
+        return $parameters !== [];
     }
 
     private function defaultController(string $controller): object

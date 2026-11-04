@@ -26,8 +26,6 @@ class RuntimePaths
             throw new RuntimeException('Invalid application runtime root.');
         }
 
-        clearstatcache(true, $root);
-
         $real = realpath($root);
 
         if ($real === false || ! is_dir($real)) {
@@ -94,7 +92,6 @@ class RuntimePaths
     public function ensureDirectory(array $segments): string
     {
         self::validateSegments($segments);
-        clearstatcache(true, $this->root);
 
         if (Path::isLink($this->root) || realpath($this->root) !== $this->root) {
             throw new RuntimeException('Application runtime root changed.');
@@ -104,7 +101,6 @@ class RuntimePaths
 
         foreach ($segments as $segment) {
             $path .= DIRECTORY_SEPARATOR . $segment;
-            clearstatcache(true, $path);
 
             if (Path::isLink($path)) {
                 throw new RuntimeException("Runtime directory is linked: {$path}");

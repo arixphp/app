@@ -41,10 +41,7 @@ class Environment
 
     protected function getFilePath(): string|null
     {
-        clearstatcache(true, $this->envFilePath);
-
         if (! file_exists($this->envFilePath)) {
-
             return null;
         }
 

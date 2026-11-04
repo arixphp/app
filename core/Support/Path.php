@@ -25,8 +25,6 @@ class Path extends ForbidInstance
             return false;
         }
 
-        clearstatcache(true, $path);
-
         if (! is_dir($path)) {
             return false;
         }

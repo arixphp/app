@@ -208,8 +208,6 @@ class Storage
             }
         }
 
-        clearstatcache(true, $file);
-
         if (is_link($file) || realpath($file) !== $file) {
             throw new InvalidArgumentException('Linked storage paths are not allowed.');
         }
@@ -222,8 +220,6 @@ class Storage
         if (! is_file($file) && ! is_dir($file)) {
             return;
         }
-
-        clearstatcache(true, $file);
 
         if (is_link($file) || realpath($file) !== $file) {
             throw new InvalidArgumentException('Linked storage paths are not allowed.');

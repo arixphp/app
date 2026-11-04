@@ -75,8 +75,6 @@ class AutoloadConfiguration
 
     protected function parse(): self
     {
-        clearstatcache(true, $this->filePath);
-
         if (! $this->configFileIsValid()) {
             throw new RuntimeException('Application .arix.json is missing, linked or unreadable.');
         }
