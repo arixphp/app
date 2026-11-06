@@ -207,8 +207,10 @@
         "Markdown/DocumentReader.php": "9d491eec77792343614bf7754bf0b1f8b5ce51650a4ac4a830e06c46a31f4ac2",
         "Markdown/Heading.php": "7968c9f04b37e217a52a8c6a43d2da07e55836ded6c9061924deeffb8ca002d0",
         "Markdown/HeadingParser.php": "32e0110dfabbe00d366165e3e7ecaae333b1be467db101994caf5112be2e0ae1",
-        "Markdown/Markdown.php": "23d8b7e24a07f9181ecacf9a04faf3dcc0322e181d38e807342b26dc56687034",
-        "Markdown/RenderedMarkdown.php": "1f320facd3bd35d10e4d058fce1cbb7fa1efb6c9cddb765cf9451e5c68239377",
+        "Markdown/LICENSE": "1f76510d5ebe409ea452042cc301c57eebdd7049eb079dc5e7a82f023ccab0c9",
+        "Markdown/Markdown.php": "44c27edfea9823624096f3889dd3e3e1f4cf08ff90477f14912896aeec5523fc",
+        "Markdown/RenderedMarkdown.php": "d0f64796e5dadee4b94dd079c06108f00381e153f0e830294caead2e5fa0dc78",
+        "Markdown/Yaml.php": "a4a04a7beb698de25cd718a6d7da9e7b78375db0c820e0a80ecd4736a7b7128f",
         "Parsedown/LICENSE": "d76b34cb4a026e7d8f9e13e2c4e56e985bff8749659c90456d13bea99713a1bc",
         "Parsedown/Parsedown.php": "b8c1fa48b8c1417d02552a6bd6263719022acb96b8fabeaa1f30016fd52f7333",
         "Routing/ApplicationUrl.php": "28482ebfdb66872d3ffbb483bdcd6f30f8c97e1622d6b64338764a46e8826523",
@@ -268,5 +270,5 @@
         "imports.json": "04aba36a7aa0d1234645e209c268f26ecb473c590b0ba9c997239ea9bb12a72f",
         "stubs/error.html": "e83a401a6856aa86eb6483c6a31249b57d945594228ec9c5a594f68c67b09fe1"
     },
-    "id": "99c02a54e7c4cd33fde438d0d82a56eb8a3dde6cac1eedb3191a9033e68a7768"
+    "id": "893bcee800064ab61b1deb64c41ecb11f56464b30cd8d3453cb80ef0f3271d27"
 }
