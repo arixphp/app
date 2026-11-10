@@ -1,6 +1,14 @@
 Options -Indexes -MultiViews -ExecCGI -FollowSymLinks
+RewriteEngine Off
 DirectoryIndex disabled
 SetHandler default-handler
+<If "%{REQUEST_URI} !~ m#^/(?:[A-Za-z0-9_-]+/)*scripts/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:js)$#">
+    Require all denied
+</If>
+<If "%{REQUEST_METHOD} !~ m#^(GET|HEAD)$#">
+    Header always set Allow "GET, HEAD"
+    Redirect 405 /
+</If>
 <FilesMatch "(?i)^(?![A-Za-z0-9_-]+\.(?:js)$)">
     Require all denied
 </FilesMatch>

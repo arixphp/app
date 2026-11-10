@@ -130,7 +130,7 @@ install Pest in the application. XML and tests are trusted developer code, not a
   match it too. `style('app.css')` and `script('app.js')` always hash content;
   `font('inter.woff2')` and `media('logo.webp')` accept `versioned: true`. Paths are relative
   to the helper's root. SVG and public uploads are excluded; public trees must contain no
-  links. Apache requires 2.4+, headers/mime/rewrite modules, AllowOverride and virtual-host
+  links. Apache requires 2.4+, alias/headers/mime/rewrite modules, AllowOverride and virtual-host
   `TraceEnable Off`. LiteSpeed and IIS still require native deployment verification.
 - Views: `view('x')` resolves `app/views/x.arix.php` **or** `x.php`, not both (if both exist, it
   fails). `.arix.php` views are compiled into a private, writable cache; without write access

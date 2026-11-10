@@ -9,7 +9,7 @@ DirectoryIndex index.php
     Require all denied
 </FilesMatch>
 
-# Required: Apache 2.4+, mod_headers, mod_mime, mod_rewrite and AllowOverride.
+# Required: Apache 2.4+, mod_alias, mod_headers, mod_mime, mod_rewrite and AllowOverride.
 # The virtual host must set TraceEnable Off (not permitted in .htaccess).
 # Do not silently bypass security rules when a required module is missing.
 <FilesMatch "(?i)\.(?:php|html?|css|js)$">
@@ -21,6 +21,7 @@ DirectoryIndex index.php
 RewriteEngine On
 RewriteRule ^(?:app|core|cli|tests|docs|storage|assets)(?:/|$) - [F,L,NC]
 RewriteRule (^|/)\. - [F,L]
+RewriteRule %[0-9A-Fa-f]{2} - [F,L]
 RewriteRule ^phpunit\.xml(?:\.dist)?$ - [F,L,NC]
 RewriteRule ^(?:styles|scripts|fonts|media)(?:/|$) - [E=ARIX_ASSET:1,NC]
 RewriteCond %{REQUEST_METHOD} !^(?:GET|HEAD)$
