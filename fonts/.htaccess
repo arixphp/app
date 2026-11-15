@@ -1,6 +1,10 @@
 Options -Indexes -MultiViews -ExecCGI -FollowSymLinks
+RewriteEngine Off
 DirectoryIndex disabled
 SetHandler default-handler
+<If "%{REQUEST_URI} !~ m#^/(?:[A-Za-z0-9_-]+/)*fonts/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?i:woff|woff2|ttf|otf)$#">
+    Require all denied
+</If>
 <FilesMatch "(?i)^(?![A-Za-z0-9_-]+\.(?:woff|woff2|ttf|otf)$)">
     Require all denied
 </FilesMatch>
